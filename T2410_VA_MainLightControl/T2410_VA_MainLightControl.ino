@@ -73,17 +73,7 @@ main_ctrl_st main_ctrl = {0x00};
 
 void debug_print_task(void);
 
-//                              name             ms next state prevcb
-atask_st read_key_task_handle      = {"Read Key       ", 100,0, 0, 255, 0, 100, run_read_key_commands };
-atask_st send_key_task_handle      = {"Send Key       ", 10, 0, 0, 255, 0, 0, run_send_key_commands };
-atask_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, 0, 0, menu4x2_timeout_task };
-atask_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, 0, 0, va_signal_update};
-atask_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, 0, 0, va_signal_state_machine};
-atask_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, 0, 0, autom_task};
-atask_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 0, supervisor_task};
 atask_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 0, debug_print_task};
-atask_st rtc_task_handle           = {"RTC TimeMachine", 1000,0, 0, 255, 0, 0, rtc_time_machine};
-//atask_st eeprom_task_handle        = {"EEPROM Emulator", 1000,0, 0, 255, 0, 0, eep_time_machine};
 
 int show = -1;
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -92,17 +82,8 @@ extern atask_st task[TASK_NBR_OF];
 
 void initialize_tasks(void)
 {
-  atask_initialize(TASK_NBR_OF);
-  atask_set_task(TASK_READ_KEY, &read_key_task_handle); 
-  atask_set_task(TASK_SEND_RFM, &send_key_task_handle); 
-  atask_set_task(TASK_MENU_TIMEOUT, &menu_timeout_task_handle); 
-  atask_set_task(TASK_AUTOM, &autom_task_handle);
-  atask_set_task(TASK_VA_SIGNAL, &signal_task_handle);
-  atask_set_task(TASK_VA_SIGNAL_STATE,&signal_state_task_handle);
-  atask_set_task(TASK_SUPERVISOR, &supervisor_task_handle);
-  atask_set_task(TASK_DEBUG, &debug_print_handle);
-  atask_set_task(TASK_RTC, &rtc_task_handle);
-  // atask_set_task(TASK_EEP, &eeprom_task_handle);
+  atask_initialize();
+  atask_add_new(&debug_print_handle);
   Serial.printf("Tasks initialized (%d)\n",TASK_NBR_OF);
 }
 
@@ -114,23 +95,16 @@ void setup() {
   Serial1.setRX(PIN_SERIAL_1_RX);
   Serial2.setTX(PIN_SERIAL_2_TX);   // UART1
   Serial2.setRX(PIN_SERIAL_2_RX);
-
-
-
   Serial.begin(9600);
   Serial1.begin(9600);
   Serial2.begin(9600);
 
   helper_initialize_data();
-
-
   delay(3000);
   while (!Serial);
   Serial.println(APP_NAME);
   Serial.println(__DATE__); Serial.println(__TIME__);
-  
-  io_initialize_tiny_pico();
-  
+  io_initialize_tiny_pico(); 
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);
   Wire1.setClock(400000);
@@ -160,8 +134,7 @@ void setup() {
 
   Wire1.beginTransmission(LCD_I2C_ADDR);
   error = Wire1.endTransmission();
-  Serial.print("Error: ");
-  Serial.print(error);
+  Serial.printf("Error: %d\n",error);
 
   if (error == 0) {
     Serial.println(": LCD found.");

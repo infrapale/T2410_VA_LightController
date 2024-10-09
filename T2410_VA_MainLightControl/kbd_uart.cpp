@@ -13,6 +13,9 @@
 
 extern main_ctrl_st main_ctrl;
 
+atask_st read_key_task_handle      = {"Read Key       ", 100,0, 0, 255, 0, 100, run_read_key_commands };
+atask_st send_key_task_handle      = {"Send Key       ", 10, 0, 0, 255, 0, 0, run_send_key_commands };
+
 kbd_uart_st  kbd_uart;
 kbd_data_st kbd_rx_ring[KBD_RX_RING_BUFF_LEN];
 
@@ -23,6 +26,9 @@ kbd_data_st kbd_rx_ring[KBD_RX_RING_BUFF_LEN];
 
 void kbd_uart_initialize(void)
 {
+    atask_add_new(&read_key_task_handle);
+    atask_add_new(&send_key_task_handle);
+
     kbd_uart.rd_sm    = atask_get_task(TASK_READ_KEY);
     kbd_uart.send_sm  = atask_get_task(TASK_SEND_RFM);
     memset(&kbd_uart,0x00, sizeof(kbd_uart));
@@ -158,7 +164,7 @@ void run_send_key_commands(void)
   static kbd_data_st key_data;
   static key_function_st func_data;
 
-  switch( kbd_uart.send_sm->state)
+  switch( send_key_task_handle.state)
   {
     case 0:   // wait for key to be pressed
       if (kbd_ring_get_key(&key_data))
@@ -180,13 +186,13 @@ void run_send_key_commands(void)
               switch (func_data.type)
               {
                 case FUNC_RELAY:
-                  kbd_uart.send_sm->state = 10;
+                  send_key_task_handle.state = 10;
                   break;
                 case FUNC_RELAY_GROUP:
-                  kbd_uart.send_sm->state = 20;
+                  send_key_task_handle.state = 20;
                   break;
                 case FUNC_OPTION:
-                  //kbd_uart.send_sm->state = 30;
+                  //send_send_task_handle.state = 30;
                   break;
                 default:
                   Serial.println("Incorect function type"); 
@@ -200,57 +206,57 @@ void run_send_key_commands(void)
       break;
 
     case 10:
-      if (sema_reserve(SEMA_SERIAL2)) kbd_uart.send_sm->state++;
+      if (sema_reserve(SEMA_SERIAL2)) send_key_task_handle.state++;
       break;  
     case 11:  // single relay function
       va_signal_set_event(VA_SIGNAL_EVENT_SENDING);
       relay_send_one((va_relays_et)func_data.indx, key_data.value );
       next_send_ms = millis() + RFM_SEND_INTERVAL;
-      kbd_uart.send_sm->state++;
+      send_key_task_handle.state++;
       break;
     case 12:
       if (millis() > next_send_ms)
       {
         sema_release(SEMA_SERIAL2);
-        kbd_uart.send_sm->state = 0;
+        send_key_task_handle.state = 0;
         //va_signal_return_state();
       } 
       break;  
     case 20:  // relay group
       va_signal_set_event(VA_SIGNAL_EVENT_SENDING);
       relay_indx = 0;
-      kbd_uart.send_sm->state++;
+      send_key_task_handle.state++;
       break;  
     case 21:
       while (relay_indx < VA_RELAY_NBR_OF)
       {
         if (relay_get_is_relay_in_group((va_relays_et)relay_indx, func_data.indx )) 
         {
-          kbd_uart.send_sm->state++;  // send realy message
+          send_key_task_handle.state++;  // send realy message
           break;
         }  
         else relay_indx++;  // check next relay
       }
       if (relay_indx >= VA_RELAY_NBR_OF) 
       {
-        kbd_uart.send_sm->state = 0;
+        send_key_task_handle.state = 0;
         //va_signal_return_state();
       }
       break;  
     case 22: 
-      if (sema_reserve(SEMA_SERIAL2)) kbd_uart.send_sm->state++;
+      if (sema_reserve(SEMA_SERIAL2)) send_key_task_handle.state++;
       break;
     case 23:
       relay_send_one((va_relays_et)relay_indx, key_data.value );
       next_send_ms = millis() + RFM_SEND_INTERVAL;
       relay_indx++;
-      kbd_uart.send_sm->state++;
+      send_key_task_handle.state++;
       break;
     case 24:
       if (millis() > next_send_ms) 
       {
         sema_release(SEMA_SERIAL2);
-        kbd_uart.send_sm->state = 21;
+        send_key_task_handle.state = 21;
       }  
       break;  
     case 30:
@@ -282,7 +288,7 @@ void run_send_key_commands(void)
           }
         }
         // clock24_clear_state(CLOCK_STATE_OPTION);
-        kbd_uart.send_sm->state = 0;
+        send_key_task_handle.state = 0;
       }  
       break;
   }

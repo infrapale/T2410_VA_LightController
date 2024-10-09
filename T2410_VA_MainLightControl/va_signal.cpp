@@ -19,7 +19,7 @@ typedef struct
 {
   va_signal_event_et event;
   va_signal_state_et state_request;
-  atask_st  *sm;
+  // atask_st  *sm;
   relay_prog_et relay_prog;
   uint8_t one_pix_state;
   uint8_t seq_indx;
@@ -82,6 +82,9 @@ char state_label[VA_SIGNAL_INDEX_NBR_OF][10] =
 };
 
 
+atask_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, 0, 0, va_signal_update};
+atask_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, 0, 0, va_signal_state_machine};
+
 va_signal_st va_signal;
 
 void va_signal_set_event(uint16_t state);
@@ -89,7 +92,7 @@ void va_signal_set_relay_prog(uint16_t state);
 
 void  helper_save_va_signal_state(uint16_t commit_in_sec)
 {
-    main_ctrl.state = va_signal.sm->state;
+    main_ctrl.state = signal_state_task_handle.state;
     helper_save_main_eeprom();
     //eep_request_commit(commit_in_sec);
 }
@@ -97,22 +100,24 @@ void  helper_save_va_signal_state(uint16_t commit_in_sec)
 void  helper_load_va_signal_state(void)
 {
     helper_load_main_eeprom();
-    va_signal.sm->state = main_ctrl.state;
+    signal_state_task_handle.state = main_ctrl.state;
 }
 
 void va_signal_initialize(void)
 {
     uint32_t color_u32;
     
-    
+    atask_add_new(&signal_task_handle);
+    atask_add_new(&signal_state_task_handle);
+
     va_signal.one_pix_state = 0;
     va_signal.event = VA_SIGNAL_EVENT_UNDEFINED;
-    va_signal.sm = atask_get_task(TASK_VA_SIGNAL_STATE);
+    // va_signal.sm = atask_get_task(TASK_VA_SIGNAL_STATE);
 
-    va_signal.sm->state = 0;
+    //signal_state_task_handle.state = 0;
     helper_load_va_signal_state();
-    va_signal_set_relay_prog(va_signal.sm->state);    
-    va_signal_set_event(va_signal.sm->state);
+    va_signal_set_relay_prog(signal_state_task_handle.state);    
+    va_signal_set_event(signal_state_task_handle.state);
 
     va_signal.seq_indx = 0;
     va_signal.seq_cntr = 0;
@@ -136,22 +141,22 @@ void va_signal_set_event(va_signal_event_et va_signal_event)
 
 uint16_t va_signal_get_state(void)
 {
-   return (va_signal.sm->state);
+   return (signal_state_task_handle.state);
 }
 
 uint8_t va_signal_get_state_index(void)
 {
-   return ((uint8_t)va_signal.sm->state >> 4);
+   return ((uint8_t)signal_state_task_handle.state >> 4);
 }
 
 void va_signal_set_state(uint16_t new_state)
 {
-  va_signal.sm->state = new_state;
+  signal_state_task_handle.state = new_state;
 }
 
 char *va_signal_get_state_label(void)
 {
-   uint8_t indx = (va_signal.sm->state >> 4) & 0x0F;
+   uint8_t indx = (signal_state_task_handle.state >> 4) & 0x0F;
    return state_label[indx];
 }
 
@@ -162,7 +167,7 @@ uint16_t va_signal_get_cntr(void)
 
 void va_signal_update(void)
 {
-    uint8_t ind_indx = va_signal.sm->state >> 4;
+    uint8_t ind_indx = signal_state_task_handle.state >> 4;
     if(++va_signal.seq_cntr > va_signal_pattern[ind_indx][va_signal.seq_indx].duration)
     {
         if(++va_signal.seq_indx >= NBR_COLOR_SEQ) va_signal.seq_indx = 0;
@@ -252,23 +257,23 @@ void va_signal_state_machine(void)
           va_signal.sm_millis = 0xFFFFFFFF;
       }
     }   
-    if ((va_signal.event != prev_event) || (va_signal.sm->state != prev_state))
+    if ((va_signal.event != prev_event) || (signal_state_task_handle.state != prev_state))
     {
-        Serial.printf("State %d, Event = %d\n\r", va_signal.sm->state, va_signal.event);
+        Serial.printf("State %d, Event = %d\n\r", signal_state_task_handle.state, va_signal.event);
         //Serial.printf("millis %d, sm_millis %d\n\r", millis(), va_signal.sm_millis);
     }
-    switch(va_signal.sm->state)
+    switch(signal_state_task_handle.state)
     {
       case VA_SIGNAL_STATE_START:  // Starting ...
         va_signal.sm_millis = millis() + 1000;
-        va_signal_set_relay_prog(va_signal.sm->state);
-        va_signal.sm->state = VA_SIGNAL_STATE_START + 1;
+        va_signal_set_relay_prog(signal_state_task_handle.state);
+        signal_state_task_handle.state = VA_SIGNAL_STATE_START + 1;
         break;
 
       case VA_SIGNAL_STATE_START + 1:  // Start state
         // TODO read from edog
-        va_signal_set_relay_prog(va_signal.sm->state);
-        va_signal.sm->state = VA_SIGNAL_STATE_AT_HOME;
+        va_signal_set_relay_prog(signal_state_task_handle.state);
+        signal_state_task_handle.state = VA_SIGNAL_STATE_AT_HOME;
         break;
 
       case VA_SIGNAL_STATE_AT_HOME:   // At home state
@@ -276,17 +281,17 @@ void va_signal_state_machine(void)
         {
           case VA_SIGNAL_EVENT_SENDING:
             va_signal.sm_millis = millis() + 5000;
-            va_signal.sm->state = VA_SIGNAL_STATE_SENDING;
+            signal_state_task_handle.state = VA_SIGNAL_STATE_SENDING;
             break;
           case VA_SIGNAL_EVENT_LEAVE:
             va_signal.sm_millis = millis() + VA_SIGNAL_LEAVE_COUNTDOWN_MS;
             va_signal.cntr = VA_SIGNAL_LEAVE_COUNTDOWN_SEC;
-            va_signal.sm->state = VA_SIGNAL_STATE_COUNTDOWN;
+            signal_state_task_handle.state = VA_SIGNAL_STATE_COUNTDOWN;
             break;          
           case VA_SIGNAL_EVENT_ALERT:
             va_signal.relay_prog = RELAY_PROG_WARNING ;
-            va_signal.sm->state = VA_SIGNAL_STATE_WARNING;
-            va_signal_set_relay_prog(va_signal.sm->state);
+            signal_state_task_handle.state = VA_SIGNAL_STATE_WARNING;
+            va_signal_set_relay_prog(signal_state_task_handle.state);
             break;
         }        
         break;
@@ -295,9 +300,9 @@ void va_signal_state_machine(void)
         if (va_signal.cntr > 0) va_signal.cntr--;
         if (va_signal.event == VA_SIGNAL_EVENT_TIMEOUT) 
         {
-          va_signal.sm->state = VA_SIGNAL_STATE_AWAY;
+          signal_state_task_handle.state = VA_SIGNAL_STATE_AWAY;
           helper_save_va_signal_state(5);
-          va_signal_set_relay_prog(va_signal.sm->state);
+          va_signal_set_relay_prog(signal_state_task_handle.state);
         }         
         break;
       case VA_SIGNAL_STATE_AWAY:
@@ -305,14 +310,14 @@ void va_signal_state_machine(void)
         {
           case VA_SIGNAL_EVENT_LOGIN:
             va_signal.sm_millis = millis() + 30000;
-            va_signal.sm->state = VA_SIGNAL_STATE_AT_HOME;
+            signal_state_task_handle.state = VA_SIGNAL_STATE_AT_HOME;
             helper_save_va_signal_state(5);
-            va_signal_set_relay_prog(va_signal.sm->state);
+            va_signal_set_relay_prog(signal_state_task_handle.state);
             break;          
           case VA_SIGNAL_EVENT_ALERT:
-            va_signal.sm->state = VA_SIGNAL_STATE_ALARM;
+            signal_state_task_handle.state = VA_SIGNAL_STATE_ALARM;
             helper_save_va_signal_state(1);
-            va_signal_set_relay_prog(va_signal.sm->state);
+            va_signal_set_relay_prog(signal_state_task_handle.state);
             autom_set_program(RELAY_PROG_ALARM);
             break;
         }
@@ -321,8 +326,8 @@ void va_signal_state_machine(void)
         {
           case VA_SIGNAL_EVENT_CONFIRM:
             helper_load_main_eeprom();
-            va_signal.sm->state = main_ctrl.state;
-            va_signal_set_relay_prog(va_signal.sm->state);
+            signal_state_task_handle.state = main_ctrl.state;
+            va_signal_set_relay_prog(signal_state_task_handle.state);
             break;          
         }
         break;
@@ -332,8 +337,8 @@ void va_signal_state_machine(void)
           case VA_SIGNAL_EVENT_CONFIRM:
           case VA_SIGNAL_EVENT_TIMEOUT:
             helper_load_main_eeprom();
-            va_signal.sm->state = main_ctrl.state;
-            va_signal_set_relay_prog(va_signal.sm->state);
+            signal_state_task_handle.state = main_ctrl.state;
+            va_signal_set_relay_prog(signal_state_task_handle.state);
             break;          
         }
         break;
@@ -341,17 +346,17 @@ void va_signal_state_machine(void)
       case VA_SIGNAL_STATE_SENDING:
         if (va_signal.event == VA_SIGNAL_EVENT_TIMEOUT) 
         {
-          va_signal.sm->state = VA_SIGNAL_STATE_AT_HOME;
+          signal_state_task_handle.state = VA_SIGNAL_STATE_AT_HOME;
         }         
         break;
       default:
-        Serial.printf("!! Incorrect Signal State !!: %02X", va_signal.sm->state);
-        va_signal.sm->state = VA_SIGNAL_STATE_START;
-        va_signal_set_relay_prog(va_signal.sm->state);
+        Serial.printf("!! Incorrect Signal State !!: %02X", signal_state_task_handle.state);
+        signal_state_task_handle.state = VA_SIGNAL_STATE_START;
+        va_signal_set_relay_prog(signal_state_task_handle.state);
         break; 
     }
     va_signal.event = VA_SIGNAL_EVENT_UNDEFINED;
-    prev_state = va_signal.sm->state;
+    prev_state = signal_state_task_handle.state;
     prev_event = va_signal.event;
 
 }

@@ -43,6 +43,8 @@ typedef struct
 
 extern main_ctrl_st main_ctrl;
 
+atask_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, 0, 0, autom_task};
+
 autom_cntrl_st autom_cntrl;
 
 String str;
@@ -106,6 +108,7 @@ const uint32_t dark_time[MONTHS_PER_YEAR] =
  
 void autom_initialize(uint8_t hour, uint8_t minute)
 {
+    atask_add_new(&autom_task_handle);
     autom_cntrl.last_time.hour = 0;
     autom_cntrl.last_time.minute = 0;
     autom_cntrl.program = RELAY_PROG_AT_HOME;
@@ -115,7 +118,7 @@ void autom_initialize(uint8_t hour, uint8_t minute)
     autom_cntrl.next_get_time = 0;
     autom_cntrl.next_random = 0;
     autom_cntrl.th = atask_get_task(TASK_AUTOM);
-    autom_cntrl.th->state = 0;
+    //autom_task_handle. = 0;
     autom_cntrl.set_time = false;
 
     for (uint8_t i = VA_RELAY_UNDEF; i < VA_RELAY_NBR_OF; i++)
@@ -282,18 +285,18 @@ void autom_set_time(void)
 void autom_task()
 {
     autom_cntrl.iter_cntr++;
-    //Serial.printf("autom_task %d\n\r", autom_cntrl.th->state);
-    switch(autom_cntrl.th->state)
+    //Serial.printf("autom_task %d\n\r", autom_task_handle.);
+    switch(autom_task_handle.state)
     {
         case 0:  // Initial state
             if (supervisor_pwr_is_on()) 
             {
-              autom_cntrl.th->state = 1;
+              autom_task_handle.state = 1;
               autom_cntrl.next_get_time = autom_cntrl.iter_cntr + 10;
             }
             break;
         case 1:
-            if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time) autom_cntrl.th->state = 2;
+            if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time) autom_task_handle.state = 2;
             break;
         case 2:  // Set  Mode
             if (autom_cntrl.prev_state_index != va_signal_get_state_index())
@@ -303,7 +306,7 @@ void autom_task()
                 {
                     autom_cntrl.prev_state_index = va_signal_get_state_index();
                     SerialClock.printf("<C1MS:%d>\r\n", autom_cntrl.prev_state_index);
-                    autom_cntrl.th->state++;
+                    autom_task_handle.state++;
                     sema_release( SEMA_SERIAL2);
                 }
                 else
@@ -313,11 +316,11 @@ void autom_task()
             }
             else
             {
-              autom_cntrl.th->state++;
+              autom_task_handle.state++;
             }
             break;
         case 3:  // Set Time
-            autom_cntrl.th->state = 10;
+            autom_task_handle.state = 10;
             if (autom_cntrl.set_time)
             {
                 if (sema_reserve( SEMA_SERIAL2))
@@ -334,20 +337,20 @@ void autom_task()
             }
             break;
           case 10:  // Request Time
-            autom_cntrl.th->state = 1;
+            autom_task_handle.state = 1;
             if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time)
             {
                 if (sema_reserve( SEMA_SERIAL2))
                 {
                     SerialClock.printf("<C1TG:>\r\n");
                     autom_cntrl.next_get_time = autom_cntrl.iter_cntr + 60;
-                    autom_cntrl.th->state = 50;
+                    autom_task_handle.state = 50;
                     sema_release( SEMA_SERIAL2);
                 }
             }
             break;
         // case 20:
-        //     autom_cntrl.th->state = 20;
+        //     autom_task_handle. = 20;
         //     if (SerialClock.available())
         //     {
         //         str = SerialClock.readStringUntil('\n');
@@ -361,7 +364,7 @@ void autom_task()
         //               {
         //                 autom_cntrl.last_time.hour = main_ctrl.time.hour;
         //                 autom_cntrl.last_time.minute = main_ctrl.time.minute;
-        //                 autom_cntrl.th->state = 50;
+        //                 autom_task_handle. = 50;
         //               }
         //             }
         //         }
@@ -373,7 +376,7 @@ void autom_task()
         //         {
         //             Serial.println("No get time response -> WD Reset");
         //             //autom_cntrl.th->wd_cntr = autom_cntrl.th->wd_limit; 
-        //             autom_cntrl.th->state = 200;  
+        //             autom_task_handle. = 200;  
         //         }
         //     }
         //     break;
@@ -385,7 +388,7 @@ void autom_task()
                 Serial.println("Randomizing");
             }
             autom_cntrl.relay_indx = 0;
-            autom_cntrl.th->state++;
+            autom_task_handle.state++;
             break;
         case 51:
             bool changed;
@@ -400,16 +403,16 @@ void autom_task()
                 char rval = '0';
                 if (autom_relay[autom_cntrl.relay_indx].autom_state == RELAY_AUTOM_STATE_ON) rval = '1';
                 relay_send_one((va_relays_et)autom_cntrl.relay_indx, rval);
-                autom_cntrl.th->state++;
+                autom_task_handle.state++;
               }
               autom_cntrl.relay_indx++;
             }
             while ( !changed && (autom_cntrl.relay_indx < VA_RELAY_NBR_OF));
 
-            if ( autom_cntrl.relay_indx >= VA_RELAY_NBR_OF) autom_cntrl.th->state = 2;
+            if ( autom_cntrl.relay_indx >= VA_RELAY_NBR_OF) autom_task_handle.state = 2;
             break;
         case 52:
-             autom_cntrl.th->state--;
+             autom_task_handle.state--;
         case 100:
             //     for (uint8_t i = VA_RELAY_UNDEF; i < VA_RELAY_NBR_OF; i++)
 
@@ -417,7 +420,7 @@ void autom_task()
         case 200:
             Serial.print("#");
             supervisor_inc_cntr(SUPER_ERR_GET_TIME);
-            autom_cntrl.th->state = 2;  // TODO
+            autom_task_handle.state = 2;  // TODO
             break;
     }
 

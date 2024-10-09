@@ -4,6 +4,7 @@
 #include <time.h>
 #include "RTC_NXP.h"
 #include "RTClib.h"
+#include "atask.h"
 
 typedef struct 
 {
@@ -15,6 +16,8 @@ PCF85063A rtc;
 rtc_ctrl_st rtc_ctrl;
 
 extern main_ctrl_st main_ctrl;
+
+void rtc_time_machine(void);
 
 void set_time(void) {
   /*  !!!! "strptime()" is not available in Arduino's "time.h" !!!!
@@ -38,9 +41,28 @@ void set_time(void) {
   Serial.println("RTC got time information");
 }
 
+void  rtc_apply_epoc_time(uint32_t epoc_time)
+{
+    //uint32_t epoc = epoc_time;
+    const DateTime now =epoc_time;
+    // rtc_ctrl.new_time.tm_year = year(epoc);
+    // rtc_ctrl.new_time.tm_mon = month(epoc);  
+    // rtc_ctrl.new_time.tm_mday = day(epoc);
+    // rtc_ctrl.new_time.tm_hour = hour(epoc);
+    // rtc_ctrl.new_time.tm_min = minute(epoc);
+    // rtc_ctrl.new_time.tm_sec = second(epoc);
+    // rtc.set(&rtc_ctrl.new_time);
+    
+    // rtc.set(now);   TODO
+}
+
+atask_st rtc_task_handle           = {"RTC TimeMachine", 1000,0, 0, 255, 0, 0, rtc_time_machine};
+
+
 void rtc_initialize(void)
 {
-
+  atask_add_new(&rtc_task_handle);
+  
   if (rtc.oscillator_stop()) {
     Serial.println("==== oscillator_stop detected :( ====");
     set_time();

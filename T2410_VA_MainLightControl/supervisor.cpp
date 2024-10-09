@@ -21,10 +21,13 @@ uint16_t err_limit[SUPER_ERR_NBR_OF] =
 };
 
 supervisor_st super;
+atask_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 0, supervisor_task};
 
 void supervisor_initialize(void)
 {
-  super.sm = atask_get_task(TASK_SUPERVISOR);
+  atask_add_new(&supervisor_task_handle);
+ 
+  super.sm = &supervisor_task_handle;
   super.sm->state = 0;
   super.ldr_val = 0;
   super.wd_pin_state = 0;

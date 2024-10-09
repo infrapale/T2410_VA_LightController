@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "main.h"
 #include "io.h"
+#include "atask.h"
 #include <LiquidCrystal_PCF8574.h>
 #include "menu4x2.h"
 #include "va_signal.h"
@@ -27,6 +28,8 @@ typedef struct
 
 extern LiquidCrystal_PCF8574 lcd;
 extern main_ctrl_st main_ctrl;
+
+atask_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, 0, 0, menu4x2_timeout_task };
 
 menu4x2_ctrl_st menu4x2_ctrl;
 
@@ -304,6 +307,7 @@ void menu4x2_reset_timeout(void)
 
 void menu4x2_initialize(void)
 {
+  atask_add_new(&menu_timeout_task_handle);
   menu4x2_ctrl.level = MENU_ROOT;
   menu4x2_reset_timeout();
   lcd.setBacklight(1);
