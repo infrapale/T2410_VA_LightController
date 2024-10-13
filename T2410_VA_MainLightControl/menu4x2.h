@@ -12,13 +12,14 @@ typedef enum
   MENU_OPTION,
   MENU_SET_TIME,
   MENU_SET_DATE,
-  MENU_HOME,
+  MENU_CHECK_OUT,
   MENU_INFO,
   MENU_INFO_1,
   MENU_INFO_2,
   MENU_INFO_3,
   MENU_CODE_1,
   MENU_CODE_2,
+  MENU_CODE_3,
   MENU_TEST,
   MENU_NBR_OF  
 } menu_index_et;
@@ -32,6 +33,7 @@ typedef enum
   MENU_CAT_STATE,
   MENU_CAT_DATE_TIME,
   MENU_CAT_RESTARTS,
+  MENU_CAT_TBD
 } menu_category_et;
 
 typedef void (*menu_cb)(void);

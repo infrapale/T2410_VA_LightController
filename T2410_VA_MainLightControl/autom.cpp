@@ -43,7 +43,7 @@ typedef struct
 
 extern main_ctrl_st main_ctrl;
 
-atask_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, 0, 0, autom_task};
+atask_st autom_task_handle         = {"Automation     ", 1000,0, 0, 255, 0, 1, autom_task};
 
 autom_cntrl_st autom_cntrl;
 
@@ -277,10 +277,6 @@ bool autom_parse_time(String *tstrp)
     return do_continue;
 }
 
-void autom_set_time(void)
-{
-   autom_cntrl.set_time = true;
-}
 
 void autom_task()
 {

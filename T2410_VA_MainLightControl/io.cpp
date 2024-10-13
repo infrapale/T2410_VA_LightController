@@ -39,7 +39,7 @@ void io_feed_watchdog(void)
 void io_initialize_tiny_pico(void)
 {
     analogReadResolution(12);
-    pinMode(PIN_PIR, INPUT);
+    pinMode(PIN_PIR, INPUT_PULLUP);
     pinMode(PIN_PWM2A, OUTPUT);
     pinMode(PIN_PWM2B, OUTPUT);
 

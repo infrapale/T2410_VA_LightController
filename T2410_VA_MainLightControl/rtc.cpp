@@ -41,6 +41,21 @@ void set_time(void) {
   Serial.println("RTC got time information");
 }
 
+void rtc_set_main_ctrl_time(void) 
+{
+  rtc_ctrl.new_time.tm_year = main_ctrl.time.year;
+  rtc_ctrl.new_time.tm_mon  = main_ctrl.time.month;
+  rtc_ctrl.new_time.tm_mday = main_ctrl.time.day;
+  rtc_ctrl.new_time.tm_hour = main_ctrl.time.hour;
+  rtc_ctrl.new_time.tm_min  = main_ctrl.time.minute;
+  rtc_ctrl.new_time.tm_sec  = 00;
+
+  rtc.set(&rtc_ctrl.new_time);
+
+  Serial.println("RTC set to main time");
+}
+
+
 void  rtc_apply_epoc_time(uint32_t epoc_time)
 {
     //uint32_t epoc = epoc_time;
@@ -56,7 +71,7 @@ void  rtc_apply_epoc_time(uint32_t epoc_time)
     // rtc.set(now);   TODO
 }
 
-atask_st rtc_task_handle           = {"RTC TimeMachine", 1000,0, 0, 255, 0, 0, rtc_time_machine};
+atask_st rtc_task_handle           = {"RTC TimeMachine", 1000,0, 0, 255, 0, 1, rtc_time_machine};
 
 
 void rtc_initialize(void)
@@ -84,17 +99,9 @@ void rtc_time_machine(void)
   main_ctrl.time.minute = now.minute();
   main_ctrl.time.second = now.second();
 
-  Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", 
-      main_ctrl.time.year, main_ctrl.time.month, main_ctrl.time.day,
-      main_ctrl.time.hour, main_ctrl.time.minute, main_ctrl.time.second);
-
-      // DateTime dt;
-      // ...
-      // time_t t = dt.unixtime();
-
-      // const char *str = ctime(&t);
-      // Serial.println(str);
- 
+//   Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", 
+//       main_ctrl.time.year, main_ctrl.time.month, main_ctrl.time.day,
+//       main_ctrl.time.hour, main_ctrl.time.minute, main_ctrl.time.second);
 }
 
 // rtc_get_time(void)

@@ -44,6 +44,5 @@ uint8_t autom_get_hour(void);
 
 uint8_t autom_get_minute(void);
 
-void autom_set_time(void);
 
 #endif

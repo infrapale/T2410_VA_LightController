@@ -21,7 +21,7 @@ uint16_t err_limit[SUPER_ERR_NBR_OF] =
 };
 
 supervisor_st super;
-atask_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 0, supervisor_task};
+atask_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 1, supervisor_task};
 
 void supervisor_initialize(void)
 {

@@ -7,10 +7,12 @@
 #include "va_signal.h"
 #include "autom.h"
 #include "supervisor.h"
+#include "rtc.h"
 
-#define TIMEOUT_MENU         10000
-#define TIMEOUT_UPDATE       1000
-#define TIMEOUT_BACK_LIGHT   30000
+#define TIMEOUT_MENU          10000
+#define TIMEOUT_UPDATE        1000
+#define TIMEOUT_BACK_LIGHT    30000
+#define LOGIN_CODE_LEN        3
 
 typedef struct
 {
@@ -21,6 +23,8 @@ typedef struct
 typedef struct 
 {
    uint8_t  level;
+   uint8_t  active_key;
+   uint8_t  code_array[LOGIN_CODE_LEN];
    uint32_t bl_timeout_at;
    uint32_t menu_timeout_at;
    uint32_t menu_update_at;
@@ -29,7 +33,8 @@ typedef struct
 extern LiquidCrystal_PCF8574 lcd;
 extern main_ctrl_st main_ctrl;
 
-atask_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, 0, 0, menu4x2_timeout_task };
+atask_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, 0, 1, menu4x2_timeout_task };
+uint8_t login_code[LOGIN_CODE_LEN] = {1,5,3};
 
 menu4x2_ctrl_st menu4x2_ctrl;
 
@@ -104,6 +109,36 @@ void send_signal_event_confirm(void)
    menu4x2_show_now();
 }
 
+void add_login_code_1(void)
+{
+    menu4x2_ctrl.code_array[0] = menu4x2_ctrl.active_key;
+    menu4x2_show_now();
+}
+void add_login_code_2(void)
+{
+    menu4x2_ctrl.code_array[1] = menu4x2_ctrl.active_key;
+    menu4x2_show_now();
+}
+void add_login_code_3(void)
+{
+    menu4x2_ctrl.code_array[2] = menu4x2_ctrl.active_key;
+    bool correct_login = true;
+    for (uint8_t i = 0; i < LOGIN_CODE_LEN; i++)
+    {
+        if (menu4x2_ctrl.code_array[i] != login_code[i]) correct_login = false;
+    }
+    if (correct_login) 
+    {
+        va_signal_set_event(VA_SIGNAL_EVENT_LOGIN);
+        Serial.println("Login accepted");
+    }
+    else
+    {
+       Serial.println("Login failed");
+    }
+    menu4x2_show_now();
+
+}
 
 const menu_def_st menu4x2_def[MENU_TOTAL] =
 {
@@ -164,55 +199,55 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
 {
   [MENU_ROOT] =
   {
-    { "          ", MENU_CAT_EMPTY     , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_CHECK_OUT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_TITLE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Option    ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_CODE_1, dummy_menu},
     { "          ", MENU_CAT_DATE_TIME , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_STATE     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "Info      ", MENU_CAT_ACTIVE    , MENU_INFO, dummy_menu}
   },
   [MENU_OPTION] =
   {
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "Aika =    ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
-    { "All Off   ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_CODE_1, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_OPTION, dummy_menu},
     { "Paivam =  ", MENU_CAT_ACTIVE    , MENU_SET_DATE, dummy_menu},
-    { "Info      ", MENU_CAT_ACTIVE    , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE    , MENU_INFO, dummy_menu},
     { "Kuittaa   ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_confirm},
   },
   [MENU_SET_TIME] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "Min + 10  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_10},
     { "Min + 1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_1},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_DATE_TIME , MENU_SET_TIME, dummy_menu},
     { "Tunti+1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_plus},
     { "Tunti-1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_minus},
-    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_ROOT, autom_set_time},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_ROOT, rtc_set_main_ctrl_time},
   },
   [MENU_SET_DATE] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "Paiva + 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_plus_1},
     { "Paiva - 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_minus_1},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_DATE_TIME , MENU_SET_DATE, dummy_menu},
     { "KK + 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_plus_1},
     { "KK - 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_minus_1},
-    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_OPTION, autom_set_time},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_OPTION, rtc_set_main_ctrl_time},
   },
-  [MENU_HOME] =
+  [MENU_CHECK_OUT] =
   {
     { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "Kotona    ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_login},
     { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_ROOT, dummy_menu},
     { "Poissa    ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_leave},
     { "Sammuta   ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu}
@@ -222,33 +257,33 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "Valitse   ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_ROOT, dummy_menu},
     { "Info 1    ", MENU_CAT_ACTIVE    , MENU_INFO_1, dummy_menu},
-    { "Info 2    ", MENU_CAT_EMPTY     , MENU_INFO_2, dummy_menu},
-    { "Info 3    ", MENU_CAT_EMPTY     , MENU_INFO_3, dummy_menu}
+    { "Info 2    ", MENU_CAT_ACTIVE    , MENU_INFO_2, dummy_menu},
+    { "Info 3    ", MENU_CAT_ACTIVE    , MENU_INFO_3, dummy_menu}
   },
   [MENU_INFO_1] =
   {
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+    { "          ", MENU_CAT_EMPTY     , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_SENSOR    , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_RESTARTS  , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_EMPTY     , MENU_INFO, dummy_menu}
   },
   [MENU_INFO_2] =
   {
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+    { "          ", MENU_CAT_EMPTY     , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_TITLE     , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_TBD       , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_TBD       , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_TBD       , MENU_INFO, dummy_menu}
   },
   [MENU_INFO_3] =
   {
@@ -256,32 +291,42 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_RESTARTS  , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+    { "          ", MENU_CAT_TBD       , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_TBD       , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_TBD       , MENU_ROOT, dummy_menu}
   },
   [MENU_CODE_1] =
   {
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_CODE_2, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu}
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
+    { "_XX       ", MENU_CAT_ACTIVE    , MENU_CODE_2, add_login_code_1},
   },
 [MENU_CODE_2] =
   {
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_leave},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_login}
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+    { "*_X       ", MENU_CAT_ACTIVE    , MENU_CODE_3, add_login_code_2},
+  },
+[MENU_CODE_3] =
+  {
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
+    { "**_       ", MENU_CAT_ACTIVE    , MENU_ROOT, add_login_code_3},
   },
 
   [MENU_TEST] =
@@ -340,7 +385,34 @@ void menu4x2_show(uint8_t mindx)
           // Serial.println(line0);
           break;
         case MENU_CAT_TITLE:
-          sprintf(line0, "*** Villa Astrid ***");
+          switch(va_signal_get_state())
+          {
+            case VA_SIGNAL_STATE_START:
+              sprintf(line0, "@@@ Pian lahtee  @@@");
+              break;
+            case VA_SIGNAL_STATE_AT_HOME:
+              sprintf(line0, "*** Villa Astrid ***");
+              break;
+            case VA_SIGNAL_STATE_COUNTDOWN:
+              sprintf(line0, "Diez, nueve, ocho...");
+              break;
+            case VA_SIGNAL_STATE_AWAY:
+              sprintf(line0, "<<< Home Alone   >>>");
+              break;
+            case VA_SIGNAL_STATE_WARNING:
+              sprintf(line0, "!!!! Attenzione !!!!");
+              break;
+            case VA_SIGNAL_STATE_ALARM:
+              sprintf(line0, "!! PIIPAA  PIIPAA !!");
+              break;
+            case VA_SIGNAL_STATE_SENDING:
+              sprintf(line0, "01010101010101010101");
+              break;
+            case MENU_CAT_TBD:
+              sprintf(line0, "To be defined");
+              lcd.print (line0);
+              break;
+          }
           lcd.print (line0);
           // Serial.println(line0);
           break;
@@ -376,6 +448,7 @@ bool menu4x2_key_do_menu(char key)
   uint8_t ikey = key - '1';
   if (ikey < MENU_TOTAL)
   {
+    Serial.printf("menu4x2_key_do_menu: %d  %d  %d\n",menu4x2_ctrl.level, ikey,menu4x2[menu4x2_ctrl.level][ikey].category);
     if (menu4x2[menu4x2_ctrl.level][ikey].category >= MENU_CAT_ACTIVE) do_menu = true;
   }
   return do_menu;
@@ -390,7 +463,7 @@ void menu4x2_key_pressed(char key)
   {
       menu4x2_reset_timeout();
       lcd.setBacklight(1);
-
+      menu4x2_ctrl.active_key = ikey;
       next_menu = menu4x2[menu4x2_ctrl.level][ikey].next_level;
       menu4x2[menu4x2_ctrl.level][ikey].cb();
       menu4x2_ctrl.level = next_menu;
@@ -420,14 +493,19 @@ void menu4x2_timeout_task(void)
 
     if (menu4x2_ctrl.bl_timeout_at < millis())
     {
-      lcd.setBacklight(0);
-      menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
+      if (digitalRead(PIN_PIR) == LOW) 
+      {
+          lcd.setBacklight(0);
+          Serial.println("lcd.setBacklight(0)");
+          menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
+      }
     }
 
     if (digitalRead(PIN_PIR) == HIGH)
     {
       menu4x2_ctrl.bl_timeout_at = millis() + TIMEOUT_BACK_LIGHT;
       lcd.setBacklight(1);
+      Serial.println("lcd.setBacklight(1)");
     }
 
 }

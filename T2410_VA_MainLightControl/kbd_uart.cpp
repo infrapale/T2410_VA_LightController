@@ -13,8 +13,8 @@
 
 extern main_ctrl_st main_ctrl;
 
-atask_st read_key_task_handle      = {"Read Key       ", 100,0, 0, 255, 0, 100, run_read_key_commands };
-atask_st send_key_task_handle      = {"Send Key       ", 10, 0, 0, 255, 0, 0, run_send_key_commands };
+atask_st read_key_task_handle      = {"Read Key       ", 50,0, 0, 255, 0, 1, run_read_key_commands };
+atask_st send_key_task_handle      = {"Send Key       ", 100, 0, 0, 255, 0, 1, run_send_key_commands };
 
 kbd_uart_st  kbd_uart;
 kbd_data_st kbd_rx_ring[KBD_RX_RING_BUFF_LEN];
@@ -174,7 +174,8 @@ void run_send_key_commands(void)
 
           if (func_get_key(&key_data, &func_data))
           {
-            // Serial.printf("type: %d index: %d\n", func_data.type, func_data.indx);
+            Serial.printf("type: %d index: %d\n", func_data.type, func_data.indx);
+            Serial.printf("key_data.module: %d key_data.key: %d\n", key_data.module, key_data.key);
 
             if ((key_data.module == '1') && menu4x2_key_do_menu(key_data.key))
             {

@@ -73,12 +73,12 @@ main_ctrl_st main_ctrl = {0x00};
 
 void debug_print_task(void);
 
-atask_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 0, debug_print_task};
+atask_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 1, debug_print_task};
 
 int show = -1;
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-extern atask_st task[TASK_NBR_OF];
+// extern atask_st task[TASK_NBR_OF];
 
 void initialize_tasks(void)
 {
@@ -146,9 +146,7 @@ void setup() {
     Serial.println(": LCD not found.");
   } 
 
-  analogReadResolution(12);
-  pinMode(PIN_PIR, INPUT);
-  //menu4x2_initialize();
+  menu4x2_initialize();
   supervisor_initialize();
 
   autom_initialize(6, 37);
@@ -159,7 +157,6 @@ void setup() {
 
 void loop() {
   //edog_clear_watchdog();
-  
   atask_run();    
 }
 
@@ -167,7 +164,7 @@ void loop() {
 void debug_print_task(void)
 {
   atask_print_status(true);
-  sema_status_print();
+  //sema_status_print();
   supervisor_debug_print();
 
   // uint16_t a_ldr = analogRead(PIN_LDR);

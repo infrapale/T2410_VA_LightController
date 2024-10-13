@@ -3,13 +3,13 @@
   #include <avr/power.h>
 #endif
 #include "main.h"
+#include "io.h"
 #include "va_signal.h"
 #include "autom.h"
 #include "atask.h"
 #include "eep.h"
 #include "helper.h"
 
-#define RGB_PIX_PIN     22
 
 
 #define VA_SIGNAL_LEAVE_COUNTDOWN_SEC  30
@@ -39,7 +39,7 @@ extern main_ctrl_st main_ctrl;
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
-Adafruit_NeoPixel one_pix = Adafruit_NeoPixel(1, RGB_PIX_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel one_pix = Adafruit_NeoPixel(1, PIN_NEOPIXEL_1, NEO_GRB + NEO_KHZ800);
 
 // IMPORTANT: To reduce NeoPixel burnout risk, add 1000 uF capacitor across
 // pixel power leads, add 300 - 500 Ohm resistor on first pixel's data input
@@ -82,8 +82,8 @@ char state_label[VA_SIGNAL_INDEX_NBR_OF][10] =
 };
 
 
-atask_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, 0, 0, va_signal_update};
-atask_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, 0, 0, va_signal_state_machine};
+atask_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, 0, 1, va_signal_update};
+atask_st signal_state_task_handle  = {"Signal state   ", 1000, 0, 0, 255, 0, 1, va_signal_state_machine};
 
 va_signal_st va_signal;
 
