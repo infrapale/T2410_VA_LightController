@@ -33,7 +33,7 @@ void io_feed_watchdog(void)
 {
     if (io.wd_state == LOW) io.wd_state = HIGH;
     else io.wd_state = LOW;
-    digitalWrite(PIN_EDOG_CLR, io.wd_state);
+    //digitalWrite(PIN_EDOG_CLR, io.wd_state);
 }
 
 void io_initialize_tiny_pico(void)

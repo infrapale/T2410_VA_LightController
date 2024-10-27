@@ -1,8 +1,7 @@
 #include "main.h"
-/*
-#include <EEPROM.h>
-#include "atask.h"
 
+#include "atask.h"
+/*
 typedef struct 
 {
     atask_st  *th;
@@ -18,13 +17,17 @@ void eep_initialize(uint16_t e_size)
 {
   eep.th = atask_get_task(TASK_EEP);
   eep.th->state = 0;
-  EEPROM.begin(e_size);
-  eep.addr = 0;
-  eep.size = e_size;
-  eep.commit_in_sec = 0;
-  Serial.print("eep_initialize: state = ");
-  Serial.print(eep.th->state);
-  Serial.println();
+  Serial.printf("eep_initialize: state = %d\n",eep.th->state);
+
+  // edog_initialize(EDOG_I2C_ADDR);
+  //edog_set_wd_timeout(5000);
+  //delay(10);
+  //edog_set_sleep_time(2000);
+  //edog_rd_reg(REG_ADDR_SLEEP_TIME,4);
+
+  //edog_read_i2c(4);
+  // helper_initialize_data();
+  
   
 }
 

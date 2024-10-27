@@ -42,7 +42,7 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 *********************************************************************************************************/
 
 #define LCD_I2C_ADDR    (0x27)
-#define EDOG_I2C_ADDR   (13)
+#define EDOG_I2C_ADDR   (0x24)
 
 #include "Arduino.h"
 #include <Wire.h>
@@ -102,8 +102,7 @@ void setup() {
   helper_initialize_data();
   delay(3000);
   while (!Serial);
-  Serial.println(APP_NAME);
-  Serial.println(__DATE__); Serial.println(__TIME__);
+  Serial.printf("%s: %s %s\n",APP_NAME,__DATE__,__TIME__);
   io_initialize_tiny_pico(); 
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);
@@ -115,11 +114,15 @@ void setup() {
   Wire1.begin();
   initialize_tasks();
   rtc_initialize();
-  // eep_initialize(EEP_SIZE);
+  //eep_initialize(EEP_SIZE);
   va_signal_initialize();
 
   delay(1000);
-  // edog_initialize(EDOG_I2C_ADDR);
+  Serial.printf("edog_initialize\n");
+  delay(1000);
+  edog_initialize(EDOG_I2C_ADDR);
+  //while(1);
+
   //edog_set_wd_timeout(5000);
   //delay(10);
   //edog_set_sleep_time(2000);
