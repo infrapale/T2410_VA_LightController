@@ -6,6 +6,8 @@
 #include "RTClib.h"
 #include "atask.h"
 
+#define PCF85063_REG_RAM_BYTE  (3u) 
+
 typedef struct 
 {
     tm      new_time;
@@ -74,24 +76,43 @@ void  rtc_apply_epoc_time(uint32_t epoc_time)
 atask_st rtc_task_handle           = {"RTC TimeMachine", 1000,0, 0, 255, 0, 1, rtc_time_machine};
 
 
+void rtc_set_ram_byte(uint8_t u8)
+{
+    rtc.write_r8(PCF85063_REG_RAM_BYTE, u8);
+    Serial.printf("******  rtc_set_ram_byte(%d)\n",u8);
+    Serial.flush();
+}
+
+uint8_t rtc_get_ram_byte(void)
+{
+    return rtc.read_r8(PCF85063_REG_RAM_BYTE);
+}
+
+
+
 void rtc_initialize(void)
 {
   atask_add_new(&rtc_task_handle);
   
-  if (rtc.oscillator_stop()) {
-    Serial.println("==== oscillator_stop detected :( ====");
-    set_time();
-  } else {
-    Serial.println("---- RTC has beeing kept running! :) ----");
+  if (rtc.oscillator_stop()) 
+  {
+      Serial.println("==== oscillator_stop detected :( ====");
+      set_time();
+  } 
+  else 
+  {
+      Serial.println("---- RTC has beeing kept running! :) ----");
   }
+  //rtc_set_ram_byte(69);
 }
 
 void rtc_time_machine(void)
 {
 
   DateTime now = rtc.time(NULL);
-   
- 
+
+  // Serial.printf("RAM byte= %d\n", rtc.read_r8(PCF85063_REG_RAM_BYTE));
+  
   main_ctrl.time.year = now.year();
   main_ctrl.time.month = now.month();
   main_ctrl.time.day = now.day();

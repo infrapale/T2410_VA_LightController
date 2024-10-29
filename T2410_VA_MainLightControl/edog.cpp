@@ -1,3 +1,15 @@
+/******************************************************************************
+*******************************************************************************
+https://inductive-kickback.com/2019/04/creating-an-i2c-slave-interface-for-a-sensor-or-peripheral/
+
+https://deepbluembedded.com/arduino-i2c-tutorial-examples/
+https://duino4projects.com/mastering-i2c-interfacing-arduino-boards-for-seamless-communication/
+https://wiki-content.arduino.cc/en/Tutorial/LibraryExamples/MasterWriter
+https://thewanderingengineer.com/2014/02/17/attiny-i2c-slave/
+https://www.tastethecode.com/introducing-the-attiny-device-pcb-i2c-slave-devices
+******************************************************************************/
+
+
 #include "Arduino.h"
 #include <Wire.h>
 #include "edog.h"
@@ -36,9 +48,9 @@ void edog_put_tx_buff_uint8( uint16_t offs, uint8_t u8)
 uint32_t edog_get_rx_buff_uint32(uint16_t offs)
 {
     uint32_t u32 = 0;
-    u32 |= ((uint32_t)i2c.rx_buff[offs + 0 ] << 24) & 0x0000000FFUL;
-    u32 |= ((uint32_t)i2c.rx_buff[offs + 1 ] << 16) & 0x0000000FFUL;
-    u32 |= ((uint32_t)i2c.rx_buff[offs + 2 ] << 8)  & 0x0000000FFUL;
+    u32 |= ((uint32_t)i2c.rx_buff[offs + 0 ] << 24) & 0xFF000000UL;
+    u32 |= ((uint32_t)i2c.rx_buff[offs + 1 ] << 16) & 0x00FF0000UL;
+    u32 |= ((uint32_t)i2c.rx_buff[offs + 2 ] << 8)  & 0x00000FF00UL;
     u32 |= ((uint32_t)i2c.rx_buff[offs + 3 ] << 0)  & 0x0000000FFUL;
     return u32;
 }
@@ -46,7 +58,7 @@ uint32_t edog_get_rx_buff_uint32(uint16_t offs)
 uint16_t edog_get_rx_buff_uint16(uint16_t offs)
 {
     uint16_t u16 = 0;
-    u16 |= ((uint16_t)i2c.rx_buff[offs + 0 ] << 8)  & 0x0000000FFUL;
+    u16 |= ((uint16_t)i2c.rx_buff[offs + 0 ] << 8)  & 0x00000FF00UL;
     u16 |= ((uint16_t)i2c.rx_buff[offs + 1 ] << 0)  & 0x0000000FFUL;
     return u16;
 }
@@ -76,7 +88,13 @@ void edog_initialize(uint8_t i2c_addr)
   i2c.addr = i2c_addr;
   edog_ctrl.eeprom_addr_index = EEPROM_MAIN_DATA;
   //edog_build_test_data(0x20);
-  edog_test_eeprom_write_read();
+  //edog_test_eeprom_write_read();
+  //edog_set_wd_timeout(5000);
+  //delay(10);
+  //edog_set_sleep_time(2000);
+  //edog_rd_reg(REG_ADDR_SLEEP_TIME,4);
+  //edog_read_i2c(4);
+
 }
 
 void edog_print_rx_buff(void)
@@ -95,19 +113,19 @@ void edog_receive_i2c(void)
 {
   if(i2c.reg_m2s > 0)
   {
-    Wire.beginTransmission(i2c.addr); 
-    Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
-    Wire.endTransmission();
+    Wire1.beginTransmission(i2c.addr); 
+    Wire1.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
+    Wire1.endTransmission();
   }  
 }
 
 void edog_read_i2c(uint8_t bytes)
 {
-    Wire.requestFrom(i2c.addr, bytes);   
+    Wire1.requestFrom(i2c.addr, bytes);   
     uint8_t i = 0; 
-    while(Wire.available())    
+    while(Wire1.available())    
     { 
-      int c = Wire.read();
+      int c = Wire1.read();
       i2c.rx_buff[i++] = (uint8_t) c;
     }
 }
@@ -115,9 +133,9 @@ void edog_read_i2c(uint8_t bytes)
 void edog_send_i2c(void)
 {
   {
-    Wire.beginTransmission(i2c.addr); 
-    Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
-    Wire.endTransmission();
+    Wire1.beginTransmission(i2c.addr); 
+    Wire1.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
+    Wire1.endTransmission();
   }  
 }
 
@@ -132,12 +150,12 @@ void edog_send_i2c(void)
 // {
 //   edog_set_read_pos(pos);
 //   delay(1);
-//   Wire.requestFrom(i2c.addr, len); 
-//   Wire.requestFrom(i2c.addr, i2c.reg_s2m);   
+//   Wire1.requestFrom(i2c.addr, len); 
+//   Wire1.requestFrom(i2c.addr, i2c.reg_s2m);   
 //   uint8_t i = 0; 
-//   while(Wire.available())    
+//   while(Wire1.available())    
 //   { 
-//     int c = Wire.read();
+//     int c = Wire1.read();
 //     i2c.rx_buff[i++] = (uint8_t) c;
 //   }
 //   edog_print_rx_buff();
@@ -154,23 +172,23 @@ void edog_send_receive(void)
   Serial.println(" ");
   Serial.flush();
 
-  Wire.beginTransmission(i2c.addr); 
-  Wire.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
-  Wire.endTransmission();
+  Wire1.beginTransmission(i2c.addr); 
+  Wire1.write( i2c.tx_buff, i2c.reg_m2s + 1)  ;      
+  Wire1.endTransmission();
 
   if(i2c.reg_s2m > 0)
   {
     // delay(1);
-    //Wire.beginTransmission(i2c.addr); 
-    Wire.requestFrom(i2c.addr, i2c.reg_s2m);   
+    //Wire1.beginTransmission(i2c.addr); 
+    Wire1.requestFrom(i2c.addr, i2c.reg_s2m);   
     uint8_t i = 0; 
-    while(Wire.available())    
+    while(Wire1.available())    
     { 
-      int c = Wire.read();
+      int c = Wire1.read();
       i2c.rx_buff[i++] = (uint8_t) c;
     }
 
-    //Wire.endTransmission();
+    //Wire1.endTransmission();
   }
 }
 
@@ -216,6 +234,17 @@ void edog_set_wd_timeout(uint32_t wd_timeout)
   edog_build_uint_msg(CMD_SET_WD_INTERVAL, wd_timeout, 4, 0);
   edog_send_receive();
 }
+
+uint32_t edog_get_wd_timeout(void)
+{
+  Serial.printf("Read WD TIMEOUT\n");
+  
+  edog_build_uint_msg(CMD_GET_WD_INTERVAL, 0, 1, 4);
+  edog_send_receive();  
+  edog_print_rx_buff();
+  return edog_get_rx_buff_uint32(0);
+}
+
 
 void edog_set_sleep_time(uint32_t sleep_time)
 {
@@ -275,9 +304,8 @@ void edog_read_eeprom(eeprom_index_et eeprom_addr_index)
 
   edog_build_uint_msg(CMD_EEPROM_LOAD, 0, 0, 0);
   edog_send_i2c();
-  delay(10);
-
-  delay(5);
+  
+  delay(20);
   edog_build_uint_msg(CMD_EEPROM_READ, 1, 0, 8);
 
   edog_send_receive();  
@@ -326,29 +354,41 @@ void edog_test_eeprom_write_read(void)
   eeprom_index_et eeprom_addr_index;
 
   Serial.printf("edog_test_eeprom_write_read ------\n");
-  for (uint8_t iter=0; iter<2; iter++)
+
+  // edog_set_wd_timeout(0x2345);
+  // for( uint32_t i=0x10; i< 0x100; i+=0x10)
+  // {
+  //     uint32_t ival =  edog_get_wd_timeout();
+  //     Serial.printf("read ival = %X\n", ival);
+  //     Serial.printf("add %X\n",i);
+  //     edog_set_wd_timeout(ival +i);
+  // }
+
+  // while(1);    
+
+  for (uint8_t iter=0; iter<4; iter++)
   {
     Serial.printf("edog_test_eeprom_write_read test iteration %d\n", iter);
     
-    eeprom_addr_index = EEPROM_USER_4;
+    eeprom_addr_index = EEPROM_USER_0;
     Serial.printf("> read index= %d\n", eeprom_addr_index);
     edog_read_eeprom(eeprom_addr_index);
     edog_print_rx_buff();
 
-    eeprom_addr_index = EEPROM_USER_5;
+    eeprom_addr_index = EEPROM_USER_1;
     Serial.printf("> read index= %d\n", eeprom_addr_index);
     edog_read_eeprom(eeprom_addr_index);
     edog_print_rx_buff();
 
-    eeprom_addr_index = EEPROM_USER_4;
+    eeprom_addr_index = EEPROM_USER_0;
     Serial.printf("> write index= %d\n", eeprom_addr_index);
-    edog_build_test_data(0x40);
+    edog_build_test_data(0x40+iter);
     edog_write_eeprom(eeprom_addr_index, tarr1);
     edog_print_tx_buff();
 
-    eeprom_addr_index = EEPROM_USER_5;
+    eeprom_addr_index = EEPROM_USER_1;
     Serial.printf("> write index= %d\n", eeprom_addr_index);
-    edog_build_test_data(0x50);
+    edog_build_test_data(0x50+iter);
     edog_write_eeprom(eeprom_addr_index, tarr1);
     edog_print_tx_buff();
 

@@ -85,6 +85,10 @@ void initialize_tasks(void)
   atask_initialize();
   atask_add_new(&debug_print_handle);
   Serial.printf("Tasks initialized (%d)\n",TASK_NBR_OF);
+ 
+  uint8_t mode = rtc_get_ram_byte();
+
+
 }
 
 
@@ -101,12 +105,12 @@ void setup() {
 
   helper_initialize_data();
   delay(3000);
-  while (!Serial);
+  // while (!Serial);
   Serial.printf("%s: %s %s\n",APP_NAME,__DATE__,__TIME__);
   io_initialize_tiny_pico(); 
   Wire.setSCL(PIN_I2C_SCL);
   Wire.setSDA(PIN_I2C_SDA);
-  Wire1.setClock(400000);
+  Wire1.setClock(100000);
   Wire1.setSCL(PIN_I2C1_SCL);
   Wire1.setSDA(PIN_I2C1_SDA);
   
@@ -114,21 +118,15 @@ void setup() {
   Wire1.begin();
   initialize_tasks();
   rtc_initialize();
+  rtc_set_ram_byte(42);
   //eep_initialize(EEP_SIZE);
   va_signal_initialize();
 
   delay(1000);
   Serial.printf("edog_initialize\n");
   delay(1000);
-  edog_initialize(EDOG_I2C_ADDR);
-  //while(1);
+  edog_initialize(EDOG_I2C_ADDR); 
 
-  //edog_set_wd_timeout(5000);
-  //delay(10);
-  //edog_set_sleep_time(2000);
-  //edog_rd_reg(REG_ADDR_SLEEP_TIME,4);
-
-  //edog_read_i2c(4);
   // helper_initialize_data();
   
   kbd_uart_initialize();

@@ -52,8 +52,8 @@ typedef enum
 
 #define EEPROM_ADDR_MAIN_DATA     0x00
 #define EEPROM_ADDR_RESTARTS      0x20
-#define EEPROM_ADDR_USER_0        0x40
-#define EEPROM_ADDR_USER_1        0x48
+#define EEPROM_ADDR_USER_0        0x30
+#define EEPROM_ADDR_USER_1        0x38
 #define EEPROM_ADDR_USER_2        0x50
 #define EEPROM_ADDR_USER_3        0x58
 #define EEPROM_ADDR_USER_4        0x60

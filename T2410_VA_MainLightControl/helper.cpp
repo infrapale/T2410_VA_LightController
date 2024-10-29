@@ -3,7 +3,7 @@
 #include "va_signal.h"
 #include "eep.h"
 
-#define EEPROM_ADDR_MAIN_DATA  (EEPROM_ADDR_APP_DATA + 0x0000)
+//#define EEPROM_ADDR_MAIN_DATA  (EEPROM_ADDR_APP_DATA + 0x0000)
 
 //extern main_eeprom_data_st main_eeprom_data;
 extern main_ctrl_st main_ctrl;
