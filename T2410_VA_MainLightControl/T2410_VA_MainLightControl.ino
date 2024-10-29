@@ -78,7 +78,6 @@ atask_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 1, d
 int show = -1;
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
-// extern atask_st task[TASK_NBR_OF];
 
 void initialize_tasks(void)
 {
@@ -118,7 +117,6 @@ void setup() {
   Wire1.begin();
   initialize_tasks();
   rtc_initialize();
-  rtc_set_ram_byte(42);
   //eep_initialize(EEP_SIZE);
   va_signal_initialize();
 

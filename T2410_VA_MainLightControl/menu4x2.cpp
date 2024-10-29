@@ -1,3 +1,31 @@
+/******************************************************************************
+    Menu4x2.cpp
+*******************************************************************************
+    Key module - key code
+    Left Keypad             Right Keypad
+    -----     -----         -----    -----
+    |1-5|     |1-1|    !    |2-5|    |2-1|
+    -----     -----         -----    -----
+    |1-6|     |1-2|    !    |2-6|    |2-2|
+    -----     -----         -----    -----
+    |1-7|     |1-3|    !    |2-7|    |2-3|
+    -----     -----         -----    -----
+    |1-8|     |1-4|    !    |2-8|    |2-4|
+    -----     -----         -----    -----
+
+    Left Keypad   Label and INnex
+    -------     ------- 
+    |A (4)|     |B (0)| 
+    -------     ------- 
+    |C (5)|     |D (1)| 
+    -------     ------- 
+    |E (6)|     |F (2)| 
+    -------     ------- 
+    |G (7)|     |H (3)| 
+    -------     ------- 
+
+******************************************************************************/
+
 #include "Arduino.h"
 #include "main.h"
 #include "io.h"
@@ -14,6 +42,15 @@
 #define TIMEOUT_BACK_LIGHT    30000
 #define LOGIN_CODE_LEN        3
 
+#define KEY_INDEX_A     4
+#define KEY_INDEX_B     0           
+#define KEY_INDEX_C     5           
+#define KEY_INDEX_D     1           
+#define KEY_INDEX_E     6           
+#define KEY_INDEX_F     2           
+#define KEY_INDEX_G     7           
+#define KEY_INDEX_H     8            
+
 typedef struct
 {
   uint8_t row;
@@ -28,13 +65,14 @@ typedef struct
    uint32_t bl_timeout_at;
    uint32_t menu_timeout_at;
    uint32_t menu_update_at;
+   time_st  time;
 } menu4x2_ctrl_st;
 
 extern LiquidCrystal_PCF8574 lcd;
 extern main_ctrl_st main_ctrl;
 
 atask_st menu_timeout_task_handle  = {"Menu Timeout   ", 1000, 0, 0, 255, 0, 1, menu4x2_timeout_task };
-uint8_t login_code[LOGIN_CODE_LEN] = {1,5,3};
+uint8_t login_code[LOGIN_CODE_LEN] = {KEY_INDEX_B, KEY_INDEX_A, KEY_INDEX_F};
 
 menu4x2_ctrl_st menu4x2_ctrl;
 
@@ -45,43 +83,43 @@ void dummy_menu(void)
 
 void hour_plus(void)
 {
-    if(++main_ctrl.time.hour > 23) main_ctrl.time.hour = 0;
+    if(++menu4x2_ctrl.time.hour > 23) menu4x2_ctrl.time.hour = 0;
 }
 void hour_minus(void)
 {
-    if(main_ctrl.time.hour > 0) main_ctrl.time.hour--;
-    else main_ctrl.time.hour = 23;
+    if(menu4x2_ctrl.time.hour > 0) menu4x2_ctrl.time.hour--;
+    else menu4x2_ctrl.time.hour = 23;
 }
 
 void minute_plus_10(void)
 {
-    main_ctrl.time.minute +=  10;
-    if(main_ctrl.time.minute > 59) main_ctrl.time.minute -= 60;
+    menu4x2_ctrl.time.minute +=  10;
+    if(menu4x2_ctrl.time.minute > 59) menu4x2_ctrl.time.minute -= 60;
 }
 void minute_plus_1(void)
 {
-    if(++main_ctrl.time.minute > 59) main_ctrl.time.minute -=60;
+    if(++menu4x2_ctrl.time.minute > 59) menu4x2_ctrl.time.minute -=60;
 }
 
 void month_plus_1(void)
 {
-    if(++main_ctrl.time.month > 12) main_ctrl.time.month = 1;
+    if(++menu4x2_ctrl.time.month > 12) menu4x2_ctrl.time.month = 1;
 }
 
 void month_minus_1(void)
 {
-    if (main_ctrl.time.month > 1) main_ctrl.time.month--;
-    else main_ctrl.time.month = 12;
+    if (menu4x2_ctrl.time.month > 1) menu4x2_ctrl.time.month--;
+    else menu4x2_ctrl.time.month = 12;
 }
 void day_plus_1(void)
 {
-    if(++main_ctrl.time.day > 31) main_ctrl.time.day = 1;
+    if(++menu4x2_ctrl.time.day > 31) menu4x2_ctrl.time.day = 1;
 }
 
 void day_minus_1(void)
 {
-    if (main_ctrl.time.day > 1) main_ctrl.time.day--;
-    else main_ctrl.time.day = 31;
+    if (menu4x2_ctrl.time.day > 1) menu4x2_ctrl.time.day--;
+    else menu4x2_ctrl.time.day = 31;
 }
 
 
@@ -139,6 +177,26 @@ void add_login_code_3(void)
     menu4x2_show_now();
 
 }
+void start_time_functions(void)
+{
+    menu4x2_ctrl.time.year   =  main_ctrl.time.year;
+    menu4x2_ctrl.time.month   =  main_ctrl.time.month;
+    menu4x2_ctrl.time.day   =  main_ctrl.time.day;
+    menu4x2_ctrl.time.hour   =  main_ctrl.time.hour;
+    menu4x2_ctrl.time.minute   =  main_ctrl.time.minute;
+    menu4x2_ctrl.time.second  =  main_ctrl.time.second;
+}
+
+void accept_new_time()
+{
+    main_ctrl.time.year   = menu4x2_ctrl.time.year;
+    main_ctrl.time.month  = menu4x2_ctrl.time.month;
+    main_ctrl.time.day    = menu4x2_ctrl.time.day;
+     main_ctrl.time.hour  = menu4x2_ctrl.time.hour;
+    main_ctrl.time.minute = menu4x2_ctrl.time.minute;
+    main_ctrl.time.second = menu4x2_ctrl.time.second;
+    rtc_set_main_ctrl_time();
+}
 
 const menu_def_st menu4x2_def[MENU_TOTAL] =
 {
@@ -152,48 +210,7 @@ const menu_def_st menu4x2_def[MENU_TOTAL] =
   {3 ,0},
 };
 
-/********************************************************************************************
-    Menu definition indeces     Fixed Labels
-    --------      --------
-    |  4   |      |  0   |      Menu    Cancel
-    --------      --------
-    |  5   |      |  1   |      
-    --------      --------
-    |  6   |      |  2   |
-    --------      --------
-    |  7   |      |  3   |
-    --------      --------
-*********************************************************************************************
-  Log in at home  
-    (root)[4]->(option)[4]->()[4]->()[7]->()[10sec]->(root)
-  Log out away  
-    (root)[4]->(option)[4]->()[4]->()[3]->()[10sec]->(root)
-  Set Date
-    (root)[4]->(option)[5]->(date)[5]->()[10sec]->(root)   month + 1
-    (root)[4]->(option)[5]->(date)[6]->()[10sec]->(root)   month - 1
-    (root)[4]->(option)[5]->(date)[1]->()[10sec]->(root)   day + 1
-    (root)[4]->(option)[5]->(date)[5]->()[10sec]->(root)   day - 1
-  Set Time
-    (root)[4]->(option)[1]->(date)[5]->()[10sec]->(root)   hour + 1
-    (root)[4]->(option)[1]->(date)[6]->()[10sec]->(root)   hour - 1
-    (root)[4]->(option)[1]->(date)[1]->()[10sec]->(root)   minute + 1
-    (root)[4]->(option)[1]->(date)[5]->()[10sec]->(root)   minute - 1
-  Info
-    (root)[4]->(option)[6]->(date)[5]->[30sec]->(root)     show info 1
-    (root)[4]->(option)[5]->(date)[6]->()[10sec]->(root)   show info 2
-    (root)[4]->(option)[5]->(date)[1]->()[10sec]->(root)   show info 3
 
-    Info 1:
-      Restarts  nn
-      LDR nn PIR n
-      Status text
-    Info 2:
-      TBD
-    Info 3:
-
-  
-
-********************************************************************************************/
 
 menu4x2_t menu4x2[MENU_NBR_OF] =
 {
@@ -211,11 +228,11 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
   [MENU_OPTION] =
   {
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "Aika =    ", MENU_CAT_ACTIVE    , MENU_SET_TIME, dummy_menu},
+    { "Aika =    ", MENU_CAT_ACTIVE    , MENU_SET_TIME, start_time_functions},
     { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
     { "Test      ", MENU_CAT_ACTIVE    , MENU_TEST, dummy_menu},
     { "          ", MENU_CAT_TITLE     , MENU_OPTION, dummy_menu},
-    { "Paivam =  ", MENU_CAT_ACTIVE    , MENU_SET_DATE, dummy_menu},
+    { "Paivam =  ", MENU_CAT_ACTIVE    , MENU_SET_DATE, start_time_functions},
     { "          ", MENU_CAT_ACTIVE    , MENU_INFO, dummy_menu},
     { "Kuittaa   ", MENU_CAT_EMPTY     , MENU_ROOT, send_signal_event_confirm},
   },
@@ -225,10 +242,10 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "Min + 10  ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_10},
     { "Min + 1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, minute_plus_1},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_DATE_TIME , MENU_SET_TIME, dummy_menu},
+    { "          ", MENU_CAT_NEW_TIME , MENU_SET_TIME, dummy_menu},
     { "Tunti+1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_plus},
     { "Tunti-1   ", MENU_CAT_ACTIVE    , MENU_SET_TIME, hour_minus},
-    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_ROOT, rtc_set_main_ctrl_time},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_ROOT, accept_new_time},
   },
   [MENU_SET_DATE] =
   {
@@ -236,10 +253,10 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "Paiva + 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_plus_1},
     { "Paiva - 1 ", MENU_CAT_ACTIVE    , MENU_SET_DATE, day_minus_1},
     { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_DATE_TIME , MENU_SET_DATE, dummy_menu},
+    { "          ", MENU_CAT_NEW_TIME , MENU_SET_DATE, dummy_menu},
     { "KK + 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_plus_1},
     { "KK - 1    ", MENU_CAT_ACTIVE    , MENU_SET_DATE, month_minus_1},
-    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_OPTION, rtc_set_main_ctrl_time},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE    , MENU_OPTION, accept_new_time},
   },
   [MENU_CHECK_OUT] =
   {
@@ -388,7 +405,7 @@ void menu4x2_show(uint8_t mindx)
           switch(va_signal_get_state())
           {
             case VA_SIGNAL_STATE_START:
-              sprintf(line0, "@@@ Pian lahtee  @@@");
+              sprintf(line0, "@@@ Los gehts..  @@@");
               break;
             case VA_SIGNAL_STATE_AT_HOME:
               sprintf(line0, "*** Villa Astrid ***");
@@ -397,7 +414,7 @@ void menu4x2_show(uint8_t mindx)
               sprintf(line0, "Diez, nueve, ocho...");
               break;
             case VA_SIGNAL_STATE_AWAY:
-              sprintf(line0, "<<< Home Alone   >>>");
+              sprintf(line0, "<<< Solo en Casa >>>");
               break;
             case VA_SIGNAL_STATE_WARNING:
               sprintf(line0, "!!!! Attenzione !!!!");
@@ -430,6 +447,16 @@ void menu4x2_show(uint8_t mindx)
               main_ctrl.time.day, 
               main_ctrl.time.hour, 
               main_ctrl.time.minute);
+          lcd.print (line0);
+          // Serial.println(line0);
+          break;
+        case MENU_CAT_NEW_TIME:
+          sprintf(line0, "%02d-%02d-%02d %02d:%02d",
+              menu4x2_ctrl.time.year,
+              menu4x2_ctrl.time.month, 
+              menu4x2_ctrl.time.day, 
+              menu4x2_ctrl.time.hour, 
+              menu4x2_ctrl.time.minute);
           lcd.print (line0);
           // Serial.println(line0);
           break;

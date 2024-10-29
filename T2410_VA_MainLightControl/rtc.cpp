@@ -32,9 +32,9 @@ void set_time(void) {
   //struct tm now_tm;
 
   rtc_ctrl.new_time.tm_year = 2024 - 1900;
-  rtc_ctrl.new_time.tm_mon = 10 - 1;  // It needs to be '3' if April
-  rtc_ctrl.new_time.tm_mday = 7;
-  rtc_ctrl.new_time.tm_hour = 16;
+  rtc_ctrl.new_time.tm_mon = 11 - 1;  // It needs to be '3' if April
+  rtc_ctrl.new_time.tm_mday = 28;
+  rtc_ctrl.new_time.tm_hour = 20;
   rtc_ctrl.new_time.tm_min = 00;
   rtc_ctrl.new_time.tm_sec = 00;
 
@@ -45,8 +45,8 @@ void set_time(void) {
 
 void rtc_set_main_ctrl_time(void) 
 {
-  rtc_ctrl.new_time.tm_year = main_ctrl.time.year;
-  rtc_ctrl.new_time.tm_mon  = main_ctrl.time.month;
+  rtc_ctrl.new_time.tm_year = main_ctrl.time.year -1900;
+  rtc_ctrl.new_time.tm_mon  = main_ctrl.time.month -1;
   rtc_ctrl.new_time.tm_mday = main_ctrl.time.day;
   rtc_ctrl.new_time.tm_hour = main_ctrl.time.hour;
   rtc_ctrl.new_time.tm_min  = main_ctrl.time.minute;
@@ -94,7 +94,7 @@ void rtc_initialize(void)
 {
   atask_add_new(&rtc_task_handle);
   
-  if (rtc.oscillator_stop()) 
+  if (rtc.oscillator_stop() || true) 
   {
       Serial.println("==== oscillator_stop detected :( ====");
       set_time();
@@ -115,8 +115,8 @@ void rtc_time_machine(void)
   
   main_ctrl.time.year = now.year();
   main_ctrl.time.month = now.month();
-  main_ctrl.time.day = now.day();
-  main_ctrl.time.hour = now.hour();
+  main_ctrl.time.day = now.day(); 
+  main_ctrl.time.hour= now.hour();
   main_ctrl.time.minute = now.minute();
   main_ctrl.time.second = now.second();
 

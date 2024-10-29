@@ -32,6 +32,7 @@ typedef enum
   MENU_CAT_TITLE,
   MENU_CAT_STATE,
   MENU_CAT_DATE_TIME,
+  MENU_CAT_NEW_TIME,
   MENU_CAT_RESTARTS,
   MENU_CAT_TBD
 } menu_category_et;
