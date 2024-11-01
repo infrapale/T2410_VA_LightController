@@ -32,10 +32,10 @@ void set_time(void) {
   //struct tm now_tm;
 
   rtc_ctrl.new_time.tm_year = 2024 - 1900;
-  rtc_ctrl.new_time.tm_mon = 11 - 1;  // It needs to be '3' if April
-  rtc_ctrl.new_time.tm_mday = 28;
+  rtc_ctrl.new_time.tm_mon = 10 - 1;  // It needs to be '3' if April
+  rtc_ctrl.new_time.tm_mday = 14;
   rtc_ctrl.new_time.tm_hour = 20;
-  rtc_ctrl.new_time.tm_min = 00;
+  rtc_ctrl.new_time.tm_min = 42;
   rtc_ctrl.new_time.tm_sec = 00;
 
   rtc.set(&rtc_ctrl.new_time);
@@ -94,7 +94,7 @@ void rtc_initialize(void)
 {
   atask_add_new(&rtc_task_handle);
   
-  if (rtc.oscillator_stop() || true) 
+  if (rtc.oscillator_stop()) 
   {
       Serial.println("==== oscillator_stop detected :( ====");
       set_time();

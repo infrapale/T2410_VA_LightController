@@ -1,4 +1,5 @@
 /******************************************************************************
+  EDOOG  IS CURRENTLY NOT IN USE,  HW FIX is pending
 *******************************************************************************
 https://inductive-kickback.com/2019/04/creating-an-i2c-slave-interface-for-a-sensor-or-peripheral/
 

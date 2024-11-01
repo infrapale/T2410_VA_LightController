@@ -26,6 +26,7 @@ typedef struct
    relay_prog_et  program;
    atask_st  *th;
    time_st  last_time;
+   bool     is_dark_baseline;
    uint8_t  prev_state_index;
    bool     set_time;
    uint8_t  relay_indx;
@@ -98,9 +99,9 @@ const uint32_t dark_time[MONTHS_PER_YEAR] =
     [JULY]       = {0b00000000110000000000000000000011},
     [AUGUST]     = {0b00000000111000000000000000000111},
     [SEPTEMBER]  = {0b00000000111100000000000000001111},
-    [OCTOBER]    = {0b00000000111110000000000000011111},
-    [NOVEMBER]   = {0b00000000111111000000000000111111},
-    [DECEMBER]   = {0b00000000111111100000000011111111},
+    [OCTOBER]    = {0b00000000111111000000000001111111},
+    [NOVEMBER]   = {0b00000000111111100000001111111111},
+    [DECEMBER]   = {0b00000000111111110000011111111111},
 };
 
  autom_relay_st autom_relay[VA_RELAY_NBR_OF];
@@ -139,6 +140,11 @@ uint8_t autom_get_program(void)
     return (uint8_t)autom_cntrl.program;
 }
 
+bool autom_get_is_dark(void)
+{
+    return autom_cntrl.is_dark_baseline;
+}
+
 void autom_randomize(void)
 {
     uint16_t hm = (uint16_t)main_ctrl.time.hour * MINUTES_PER_HOUR + (uint16_t)main_ctrl.time.minute;
@@ -164,7 +170,8 @@ bool autom_on_off(uint8_t rindx)
     uint8_t  pr = auto_prog[rindx][autom_relay[rindx].hindx];
     uint32_t dark_bit = dark_time[main_ctrl.time.month-1];
     bool     is_dark_now = (dark_bit & (1U << autom_relay[rindx].hindx)) != 0;
-
+     
+    autom_cntrl.is_dark_baseline = (dark_bit & (1u << main_ctrl.time.hour)) != 0; 
     Serial.printf("Dark = %08x - %d, ", dark_bit, is_dark_now);    
     Serial.printf("Relay %d hx %d on\n", rindx, autom_relay[rindx].hindx);    
 
@@ -190,95 +197,7 @@ bool autom_on_off(uint8_t rindx)
 }
 
 
-// void autom_set_time(uint8_t hour, uint8_t minute)
-// {
-//     autom_cntrl.hour = hour;
-//     autom_cntrl.minute = minute;
-// }
-
-// uint8_t autom_get_hour(void)
-// {
-//     return autom_cntrl.hour;
-// }
-
-// uint8_t autom_get_minute(void)
-// {
-//     return autom_cntrl.minute;
-// }
-
-#define TIME_NBR_OF_FIELDS 6
-
-bool autom_parse_time(String *tstrp)
-{
-    bool do_continue = true;
-    uint8_t pos[TIME_NBR_OF_FIELDS + 1];
-    String field[TIME_NBR_OF_FIELDS];
-    // String year_str, month_str, day_str, hour_str, minute_str;
-
-    for (uint8_t i = 0; i < TIME_NBR_OF_FIELDS+1; i++) pos[i] = 0;
-
-    Serial.println(*tstrp);
-    tstrp->trim();
-    //Serial.println(tstrp->length());
-
-    if(!tstrp->startsWith("<") || !tstrp->endsWith(">")) do_continue = false;
-
-    if (do_continue)
-    {
-      if (tstrp->indexOf("C1T=") != 1) do_continue = false;
-    }
-    // <C1T=:2024/5/7;9:28:16>
-    if (do_continue)
-    {
-      pos[0] = tstrp->indexOf(':');
-      pos[1] = tstrp->indexOf('/',pos[0]+1);
-      pos[2] = tstrp->indexOf('/',pos[1]+1);
-      pos[3] = tstrp->indexOf(';',pos[2]+1);
-      pos[4] = tstrp->indexOf(':',pos[3]+1);
-      pos[5] = tstrp->indexOf(':',pos[4]+1);
-      pos[6] = tstrp->indexOf('>',pos[5]+1);
-
-      Serial.print("Date-Time pos: ");
-      for (uint8_t i = 0; i < TIME_NBR_OF_FIELDS+1 ; i++)
-      {
-          if ((pos[i] == 0) || (pos[i] == 255)) do_continue = false;  
-          Serial.printf("%d=%d ",i, pos[i]);
-      }
-      Serial.println();
-    }
-    //Serial.printf("ix= %d %d %d\n", i1, i2, i3);
-    if (do_continue)
-    {
-        for (uint8_t i = 0; i < TIME_NBR_OF_FIELDS; i++)
-        {
-            field[i] = tstrp->substring(pos[i]+1,pos[i+1]);
-        }
-    }
-
-    if (do_continue)
-    {
-      main_ctrl.time.year   = field[0].toInt();
-      main_ctrl.time.month  = field[1].toInt();
-      main_ctrl.time.day    = field[2].toInt();
-      main_ctrl.time.hour   = field[3].toInt();
-      main_ctrl.time.minute = field[4].toInt();
-      main_ctrl.time.second = field[5].toInt();
-
-      Serial.printf("Date-Time accepted: %04d-%02d-%02d %02d:%02d:%02d\n\r",
-          main_ctrl.time.year,
-          main_ctrl.time.month,
-          main_ctrl.time.day,
-          main_ctrl.time.hour,
-          main_ctrl.time.minute,
-          main_ctrl.time.second
-      );
-    }
-    // Serial.println(do_continue);
-    return do_continue;
-}
-
-
-void autom_task()
+void autom_task(void)
 {
     autom_cntrl.iter_cntr++;
     //Serial.printf("autom_task %d\n\r", autom_task_handle.);
@@ -315,7 +234,7 @@ void autom_task()
               autom_task_handle.state++;
             }
             break;
-        case 3:  // Set Time
+        case 3:  // Send time to 24h clock 
             autom_task_handle.state = 10;
             if (autom_cntrl.set_time)
             {
@@ -331,6 +250,7 @@ void autom_task()
                     sema_release( SEMA_SERIAL2);
                 }              
             }
+            autom_cntrl.is_dark_baseline = ((dark_time[main_ctrl.time.month-1] & (1ULL << main_ctrl.time.hour)) != 0);     
             break;
           case 10:  // Request Time
             autom_task_handle.state = 1;
@@ -345,37 +265,6 @@ void autom_task()
                 }
             }
             break;
-        // case 20:
-        //     autom_task_handle. = 20;
-        //     if (SerialClock.available())
-        //     {
-        //         str = SerialClock.readStringUntil('\n');
-        //         if (str.length()> 0)
-        //         {
-        //             if (autom_parse_time(&str))
-        //             {
-        //               // autom_cntrl.th->wd_cntr = 0;
-        //               if ((main_ctrl.time.hour != autom_cntrl.last_time.hour) ||
-        //                   (main_ctrl.time.minute > autom_cntrl.last_time.minute ))
-        //               {
-        //                 autom_cntrl.last_time.hour = main_ctrl.time.hour;
-        //                 autom_cntrl.last_time.minute = main_ctrl.time.minute;
-        //                 autom_task_handle. = 50;
-        //               }
-        //             }
-        //         }
-        //         supervisor_clr_cntr(SUPER_ERR_GET_TIME);
-        //     }
-        //     else
-        //     {
-        //         if (autom_cntrl.iter_cntr > autom_cntrl.next_get_time)  
-        //         {
-        //             Serial.println("No get time response -> WD Reset");
-        //             //autom_cntrl.th->wd_cntr = autom_cntrl.th->wd_limit; 
-        //             autom_task_handle. = 200;  
-        //         }
-        //     }
-        //     break;
         case 50:
             if (autom_cntrl.iter_cntr > autom_cntrl.next_random)
             {
@@ -390,9 +279,7 @@ void autom_task()
             bool changed;
             Serial.printf("Auto Relay Control: Month: %d Hour: %d\n", main_ctrl.time.month, main_ctrl.time.hour);
             do
-            {
-
-              
+            {             
               changed = autom_on_off(autom_cntrl.relay_indx);
               if (changed) 
               {

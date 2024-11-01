@@ -1,6 +1,7 @@
 
-# T2301_KeyToRfm
-- T2311_RFM69_Modem
-- T23
+# T2410_VA_MainLightControl
+- HW: TinyPico PCB
+## ERRATA
+- edog power of is currenly not working due to lack of OC pulldown
 
 --------- 

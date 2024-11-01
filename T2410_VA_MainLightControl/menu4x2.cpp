@@ -288,8 +288,8 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_EMPTY     , MENU_OPTION, dummy_menu},
     { "          ", MENU_CAT_TITLE     , MENU_INFO, dummy_menu},
     { "          ", MENU_CAT_SENSOR    , MENU_INFO, dummy_menu},
-    { "          ", MENU_CAT_RESTARTS  , MENU_INFO, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_INFO, dummy_menu}
+    { "          ", MENU_CAT_IS_DARK   , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_STATE     , MENU_INFO, dummy_menu}
   },
   [MENU_INFO_2] =
   {
@@ -460,8 +460,9 @@ void menu4x2_show(uint8_t mindx)
           lcd.print (line0);
           // Serial.println(line0);
           break;
-        case MENU_CAT_RESTARTS:
-          sprintf(line0, "Restarts: %5d", main_ctrl.restart_cntr);
+        case MENU_CAT_IS_DARK:
+          if (autom_get_is_dark()) sprintf(line0, "Is dark");
+          else sprintf(line0, "Is light");
           lcd.print (line0);
           break;  
       }

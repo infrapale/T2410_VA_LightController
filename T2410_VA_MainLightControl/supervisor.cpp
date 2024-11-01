@@ -82,13 +82,17 @@ void supervisor_task(void)
   {
     case 0:
       io_enable_v33(false);
-      delay_cntr = millis() + 2000;
+      io_enable_vext(false);
+      io_feed_watchdog();
+      delay_cntr = millis() + 5000;
       super.sm->state++;
       break;
     case 1:
       if (millis() > delay_cntr)
       {
         io_enable_v33(true);
+        io_enable_vext(true);
+        io_feed_watchdog();
         super.sm->state = 10;
       } 
       break;  
@@ -146,6 +150,6 @@ void supervisor_task(void)
   // if (clr_edog)  edog_clear_watchdog();
   if (clr_edog ) 
   {
-    io_feed_watchdog();
+    //io_feed_watchdog();
   }
 }

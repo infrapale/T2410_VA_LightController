@@ -52,22 +52,15 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "io.h"
 #include "kbd_uart.h"
 #include "atask.h"
-#include "sema.h"
-#include "func.h"
 #include "relay.h"
 #include "va_signal.h"
-// #include "clock24.h"
 #include "menu4x2.h"
 #include "autom.h"
-#include "edog.h"
-#include "helper.h"
 #include "supervisor.h"
-#include "eep.h"
 #include "rtc.h"
 
   
 
-//extern task_st *task[TASK_NBR_OF];
 main_ctrl_st main_ctrl = {0x00};
 
 
@@ -102,7 +95,6 @@ void setup() {
   Serial1.begin(9600);
   Serial2.begin(9600);
 
-  helper_initialize_data();
   delay(3000);
   // while (!Serial);
   Serial.printf("%s: %s %s\n",APP_NAME,__DATE__,__TIME__);
@@ -117,20 +109,12 @@ void setup() {
   Wire1.begin();
   initialize_tasks();
   rtc_initialize();
-  //eep_initialize(EEP_SIZE);
   va_signal_initialize();
 
   delay(1000);
-  Serial.printf("edog_initialize\n");
-  delay(1000);
-  edog_initialize(EDOG_I2C_ADDR); 
-
-  // helper_initialize_data();
   
   kbd_uart_initialize();
-  // edog_test_eeprom_write_read();
-  //while(true) delay(5);
-
+  
   Wire1.beginTransmission(LCD_I2C_ADDR);
   error = Wire1.endTransmission();
   Serial.printf("Error: %d\n",error);

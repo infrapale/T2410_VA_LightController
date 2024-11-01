@@ -36,6 +36,8 @@ void autom_set_program(relay_prog_et  program);
 
 uint8_t autom_get_program(void);
 
+bool autom_get_is_dark(void);
+
 void autom_randomize(void);
 
 void autom_task();

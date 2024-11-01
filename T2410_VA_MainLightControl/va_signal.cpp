@@ -73,13 +73,13 @@ va_signal_seq va_signal_pattern[VA_SIGNAL_INDEX_NBR_OF] =
 char state_label[VA_SIGNAL_INDEX_NBR_OF][10] =
 {
 // 0123456789  
-  "Start    ",
-  "Kotona   ",
+  "Los gehts",
+  "En Casa  ",
   "Countdown",
-  "Poissa   ",
-  "Varoitus ",
-  "Halytys  ",
-  "Lahettaa "
+  "Solo     ",
+  "Warning  ",
+  "La Alarma",
+  "Transmit "
 };
 
 
@@ -102,6 +102,7 @@ uint8_t va_signal_get_state_index(void)
 {
    return ((uint8_t)signal_state_task_handle.state >> 4);
 }
+
 
 void va_signal_set_state(uint16_t new_state)
 {
