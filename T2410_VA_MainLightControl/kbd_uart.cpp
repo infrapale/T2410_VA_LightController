@@ -175,7 +175,7 @@ void run_send_key_commands(void)
           if (func_get_key(&key_data, &func_data))
           {
             Serial.printf("type: %d index: %d\n", func_data.type, func_data.indx);
-            Serial.printf("key_data.module: %d key_data.key: %d\n", key_data.module, key_data.key);
+            Serial.printf("key_data.module: %c key_data.key: %c\n", key_data.module, key_data.key);
 
             if ((key_data.module == '1') && menu4x2_key_do_menu(key_data.key))
             {
@@ -190,6 +190,7 @@ void run_send_key_commands(void)
                   send_key_task_handle.state = 10;
                   break;
                 case FUNC_RELAY_GROUP:
+                  Serial.printf("Relay Group: index: %d\n", func_data.indx);
                   send_key_task_handle.state = 20;
                   break;
                 case FUNC_OPTION:
@@ -233,7 +234,7 @@ void run_send_key_commands(void)
       {
         if (relay_get_is_relay_in_group((va_relays_et)relay_indx, func_data.indx )) 
         {
-          send_key_task_handle.state++;  // send realy message
+          send_key_task_handle.state++;  // send relay message
           break;
         }  
         else relay_indx++;  // check next relay

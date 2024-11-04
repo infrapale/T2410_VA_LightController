@@ -36,12 +36,18 @@ void io_feed_watchdog(void)
     digitalWrite(PIN_EDOG_CLR, io.wd_state);
 }
 
+bool io_internal_wd_is_anabled(void)
+{
+    return (digitalRead(PIN_WD_ENABLE) == HIGH);
+}
+
 void io_initialize_tiny_pico(void)
 {
     analogReadResolution(12);
     pinMode(PIN_PIR, INPUT_PULLUP);
     pinMode(PIN_PWM2A, OUTPUT);
     pinMode(PIN_PWM2B, OUTPUT);
+    pinMode(PIN_WD_ENABLE, INPUT_PULLUP);
 
     pinMode(PIN_EDOG_CLR, OUTPUT);
     pinMode(PIN_VEXT_EN, OUTPUT);

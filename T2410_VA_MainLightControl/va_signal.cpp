@@ -30,6 +30,8 @@ typedef struct
 } va_signal_st;
 
 
+
+
 extern main_ctrl_st main_ctrl;
 
 // Parameter 1 = number of pixels in strip
@@ -81,6 +83,7 @@ char state_label[VA_SIGNAL_INDEX_NBR_OF][10] =
   "La Alarma",
   "Transmit "
 };
+
 
 
 atask_st signal_task_handle        = {"Signal fast    ", 100, 0, 0, 255, 0, 1, va_signal_update};
@@ -215,6 +218,8 @@ void va_signal_set_event(uint16_t state)
 }
 
 
+
+
 void va_signal_set_relay_prog(uint16_t state)
 {
     relay_prog_et r_prog = RELAY_PROG_UNDEF;
@@ -246,10 +251,6 @@ void va_signal_set_relay_prog(uint16_t state)
         autom_set_program(r_prog);
     }
 }
-
-
-
-
 
 
 void va_signal_state_machine(void)

@@ -54,6 +54,18 @@ uint16_t supervisor_get_ldr(void)
   return super.ldr_val;
 }
 
+void supervisor_wdt_begin(uint32_t d_ms)
+{
+    if (d_ms > 8300) d_ms= 8300;
+    if (io_internal_wd_is_anabled()) rp2040.wdt_begin(d_ms);
+}
+
+void supervisor_wdt_reset(void)
+{
+  rp2040.wdt_reset();
+}
+
+
 void supervisor_debug_print(void)
 {
   Serial.print("Supervisor err_cntr: ");
@@ -78,6 +90,8 @@ void supervisor_task(void)
 
   // WD DEBUG super.err_cntr[SUPER_ERR_GET_TIME]++;  // DEBUG -REMOVE
 
+  supervisor_wdt_reset();  /// TODO
+
   switch(super.sm->state)
   {
     case 0:
@@ -95,6 +109,7 @@ void supervisor_task(void)
         io_feed_watchdog();
         super.sm->state = 10;
       } 
+      supervisor_wdt_begin(8000);
       break;  
     case 10:
       super.ldr_val = analogRead(PIN_LDR);

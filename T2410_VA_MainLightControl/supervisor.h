@@ -15,6 +15,11 @@ void supervisor_inc_cntr(super_err_et cntr_indx);
 
 void supervisor_clr_cntr(super_err_et cntr_indx);
 
+void supervisor_wdt_begin(uint32_t d_ms);
+
+void supervisor_wdt_reset(void);
+
+
 void supervisor_debug_print(void);
 
 bool supervisor_pwr_is_on(void);

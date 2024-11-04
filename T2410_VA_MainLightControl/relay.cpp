@@ -14,14 +14,16 @@ const int16_t relay_groups[VA_RELAY_GROUP_NBR_OF] =
     [VA_RELAY_GROUP_K]        = RELAY_GR_BIT_K,
     [VA_RELAY_GROUP_KHH]      = RELAY_GR_BIT_KHH,
     [VA_RELAY_GROUP_ULKO]     = RELAY_GR_BIT_ULKO,
+    [VA_RELAY_GROUP_WC]       = RELAY_GR_BIT_WC,
+    [VA_RELAY_GROUP_ET]       = RELAY_GR_BIT_ET,
 };
 
 
 relay_addr_st relay_addr[VA_RELAY_NBR_OF] =
 {
     [VA_RELAY_UNDEF] =      {"XXX", "XXXXX", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE},
-    [VA_RELAY_TK] =         {"TK1", "RTK__", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE},
-    [VA_RELAY_ET] =         {"TK1", "RET_1", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE},
+    [VA_RELAY_TK] =         {"TK1", "RTK__", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE  | RELAY_GR_BIT_ET },
+    [VA_RELAY_ET] =         {"TK1", "RET_1", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE | RELAY_GR_BIT_ET },
     [VA_RELAY_WC_1] =       {"TK1", "RWC_1", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE},
     [VA_RELAY_WC_2] =       {"MH2", "RWC_2", 0, RELAY_GR_BIT_ALL},
     [VA_RELAY_TUPA_1] =     {"TK1", "RTUP1", 0, RELAY_GR_BIT_ALL | RELAY_GR_BIT_ARRIVE | RELAY_GR_BIT_TUPA},
@@ -56,7 +58,7 @@ void relay_send_one(va_relays_et rindx, char value)
     Serial.printf("%s %s %c\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
     Serial.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
     // SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
-    SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[0].unit,relay_addr[rindx].relay, value);
+    SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
 }
 
 const relay_addr_st *relay_get_addr_ptr( va_relays_et relay_id)

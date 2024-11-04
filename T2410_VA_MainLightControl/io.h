@@ -33,12 +33,16 @@
 //#define PIN_EXT_PWR_OFF (13u)
 
 // RGB Neopixel Output
-#define PIN_NEOPIXEL_1  (10u)
-#define PIN_NEOPIXEL_2  (11u)
+#define PIN_NEOPIXEL_1      (10u)
+#define PIN_NEOPIXEL_2      (11u)
 
 // Audio / PWM
 #define PIN_PWM2A           (20u)
 #define PIN_PWM2B           (21u)
+
+// Intrenal Watchdog
+#define PIN_WD_ENABLE       (20u)
+
 
 // Application Specific Definitions
 
@@ -51,6 +55,8 @@ void io_enable_vext(bool enable);
 void io_enable_v33(bool enable);
 
 void io_ext_clr(bool do_clear);
+
+bool io_internal_wd_is_anabled(void);
 
 void io_feed_watchdog(void);
 

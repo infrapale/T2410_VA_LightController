@@ -38,15 +38,16 @@ typedef enum
 
 typedef enum
 {
-    RELAY_GR_BIT_ALL      = 0x0001UL,
-    RELAY_GR_BIT_ARRIVE   = 0x0002UL,
-    RELAY_GR_BIT_TUPA     = 0x0004UL,
-    RELAY_GR_BIT_MH1      = 0x0008UL,
-    RELAY_GR_BIT_MH2      = 0x0010UL,
-    RELAY_GR_BIT_K        = 0x0020UL,
-    RELAY_GR_BIT_KHH      = 0x0040UL,
-    RELAY_GR_BIT_ULKO     = 0x0080UL,
+    RELAY_GR_BIT_ALL      = 0x00001UL,
+    RELAY_GR_BIT_ARRIVE   = 0x00002UL,
+    RELAY_GR_BIT_TUPA     = 0x00004UL,
+    RELAY_GR_BIT_MH1      = 0x00008UL,
+    RELAY_GR_BIT_MH2      = 0x00010UL,
+    RELAY_GR_BIT_K        = 0x00020UL,
+    RELAY_GR_BIT_KHH      = 0x00040UL,
+    RELAY_GR_BIT_ULKO     = 0x00080UL,
     RELAY_GR_BIT_WC       = 0x00100UL,
+    RELAY_GR_BIT_ET       = 0x00200UL,
     //RELAY_GR_BIT_   = 0x0000,
 } relay_group_nbit_et;
 
@@ -61,6 +62,7 @@ typedef enum
     VA_RELAY_GROUP_KHH,
     VA_RELAY_GROUP_ULKO,
     VA_RELAY_GROUP_WC,
+    VA_RELAY_GROUP_ET,
     VA_RELAY_GROUP_NBR_OF   
 } va_relay_group_et;
 

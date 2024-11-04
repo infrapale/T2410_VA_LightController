@@ -19,6 +19,8 @@ void helper_print_hex_arr(uint8_t *arr, uint8_t n)
     Serial.println();
 }
 
+
+
 void helper_save_main_eeprom(void)
 { 
     // eep_set_addr(EEP_ADDR_MAIN_STATE);

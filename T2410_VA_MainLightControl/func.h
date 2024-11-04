@@ -20,7 +20,7 @@ typedef enum
 typedef struct
 {
     func_et  type;
-    uint8_t  indx;
+    uint16_t  indx;
 
 } key_function_st;
 
