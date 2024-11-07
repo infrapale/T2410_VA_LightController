@@ -26,6 +26,7 @@ typedef struct
   uint8_t seq_indx;
   uint8_t seq_cntr;
   uint32_t sm_millis;
+  uint32_t count_down_ms;
   uint16_t cntr;
 } va_signal_st;
 
@@ -133,11 +134,11 @@ void  va_signal_load_state(void)
     signal_state_task_handle.state = main_ctrl.state;
 }
 
-void va_signal_set_event(va_signal_event_et va_signal_event)
+void va_signal_send_state_to_24h(uint16_t state_index)
 {
-    va_signal.event = va_signal_event;
-    Serial.printf("Set event %d\n\r",va_signal.event);
+    SerialClock.printf("<C1MS:%d>\r\n", state_index);
 }
+
 
 void va_signal_initialize(void)
 {
@@ -154,7 +155,9 @@ void va_signal_initialize(void)
     //va_signal_set_state(main_ctrl.state);
     va_signal_load_state();
     va_signal_set_relay_prog(signal_state_task_handle.state);    
-    va_signal_set_event(signal_state_task_handle.state);
+    va_signal_send_state_to_24h(va_signal_get_state_index());
+
+    //va_signal_set_event(signal_state_task_handle.state);
 
     va_signal.seq_indx = 0;
     va_signal.seq_cntr = 0;
@@ -191,33 +194,36 @@ void va_signal_update(void)
 
 }
 
-void va_signal_set_event(uint16_t state)
+
+void va_signal_set_event(va_signal_event_et event)
 {
-    switch(state)
+    va_signal.event = event;
+    Serial.printf("Set event %d\n\r",va_signal.event);
+    switch(event)
     {
-        case VA_SIGNAL_STATE_START:
-            va_signal_set_event(VA_SIGNAL_EVENT_UNDEFINED);
+        case VA_SIGNAL_EVENT_LOGIN:
+            va_signal_set_state(VA_SIGNAL_STATE_AT_HOME);
             break;
-        case VA_SIGNAL_STATE_AT_HOME:
-            va_signal_set_event(VA_SIGNAL_EVENT_LOGIN);
+        case VA_SIGNAL_EVENT_LOGOUT:
+            va_signal_set_state(VA_SIGNAL_STATE_COUNTDOWN);
+            va_signal.count_down_ms = millis() +10000;
             break;
-        case   VA_SIGNAL_STATE_COUNTDOWN:
-            va_signal_set_event(VA_SIGNAL_EVENT_LEAVE);
+        case   VA_SIGNAL_EVENT_LEAVE:
+            va_signal_set_state(VA_SIGNAL_STATE_AWAY);
             break;
-        case   VA_SIGNAL_STATE_AWAY:
-            va_signal_set_event(VA_SIGNAL_EVENT_LEAVE);
+        case  VA_SIGNAL_EVENT_ALERT:
+            va_signal_set_state(VA_SIGNAL_STATE_ALARM);
             break;
-        case   VA_SIGNAL_STATE_WARNING:
-            va_signal_set_event(VA_SIGNAL_EVENT_ALERT);
+        case VA_SIGNAL_EVENT_SENDING:
+            va_signal_set_state(VA_SIGNAL_STATE_SENDING);
             break;
-        case   VA_SIGNAL_STATE_ALARM:
+        case VA_SIGNAL_EVENT_TIMEOUT:
+            
             break;
-        case   VA_SIGNAL_STATE_SENDING:
-            break;
+        default:
+            break;    
     }
 }
-
-
 
 
 void va_signal_set_relay_prog(uint16_t state)
@@ -300,12 +306,10 @@ void va_signal_state_machine(void)
         break;
 
       case VA_SIGNAL_STATE_COUNTDOWN:  // Countdown
-        if (va_signal.cntr > 0) va_signal.cntr--;
-        if (va_signal.event == VA_SIGNAL_EVENT_TIMEOUT) 
+        if (millis() > va_signal.count_down_ms)
         {
-          va_signal_set_state(VA_SIGNAL_STATE_AWAY);
-          //va_signal_set_relay_prog(signal_state_task_handle.state);
-        }         
+            va_signal_set_event(VA_SIGNAL_EVENT_LEAVE);
+        }
         break;
       case VA_SIGNAL_STATE_AWAY:
         switch(va_signal.event)

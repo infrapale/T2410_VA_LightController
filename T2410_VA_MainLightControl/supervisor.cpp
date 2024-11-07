@@ -1,6 +1,6 @@
 #include "main.h"
 #include "io.h"
-#include "signal.h"
+#include "va_signal.h"
 #include "atask.h"
 #include "edog.h"
 #include "supervisor.h"
@@ -20,6 +20,7 @@ uint16_t err_limit[SUPER_ERR_NBR_OF] =
   [SUPER_ERR_1]        = 1,
 };
 
+extern main_ctrl_st main_ctrl;
 supervisor_st super;
 atask_st supervisor_task_handle    = {"Supervisor     ", 1000,0, 0, 255, 0, 1, supervisor_task};
 
@@ -107,14 +108,26 @@ void supervisor_task(void)
         io_enable_v33(true);
         io_enable_vext(true);
         io_feed_watchdog();
-        super.sm->state = 10;
+        super.sm->state = 5;
       } 
-      supervisor_wdt_begin(8000);
+      break;  
+    case 5:
+      delay_cntr = millis() + 8000;
+      super.sm->state = 6;
+      break;
+    case 6:
+      if (millis() > delay_cntr)
+      {
+        va_signal_set_state(main_ctrl.state);
+        super.sm->state = 10;
+        //supervisor_wdt_begin(8000);
+      }
       break;  
     case 10:
       super.ldr_val = analogRead(PIN_LDR);
       super.pir_val = digitalRead(PIN_PIR);
       super.sm->state = 20;
+      va_signal_send_state_to_24h(va_signal_get_state_index());
       for (uint8_t i = 0; i < SUPER_ERR_NBR_OF; i++) 
       {
         if (super.err_cntr[i] >= err_limit[i])

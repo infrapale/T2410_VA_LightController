@@ -216,17 +216,10 @@ void autom_task(void)
             if (autom_cntrl.prev_state_index != va_signal_get_state_index())
             {
                 Serial.print("autom_task - state index: "); Serial.println(va_signal_get_state_index());
-                if (sema_reserve( SEMA_SERIAL2))
-                {
-                    autom_cntrl.prev_state_index = va_signal_get_state_index();
-                    SerialClock.printf("<C1MS:%d>\r\n", autom_cntrl.prev_state_index);
-                    autom_task_handle.state++;
-                    sema_release( SEMA_SERIAL2);
-                }
-                else
-                {
-                  Serial.print("autom_task - state index: ");
-                }
+                autom_cntrl.prev_state_index = va_signal_get_state_index();
+                va_signal_send_state_to_24h(autom_cntrl.prev_state_index);
+                autom_task_handle.state++;
+                sema_release( SEMA_SERIAL2);
             }
             else
             {
@@ -273,7 +266,7 @@ void autom_task(void)
               autom_cntrl.next_relay_ms = millis() + 2000;
             }
             else autom_cntrl.next_relay_ms = millis();   // no need to delay
-            if ( autom_cntrl.relay_indx++ >= VA_RELAY_NBR_OF) autom_task_handle.state = 2;
+            if ( ++autom_cntrl.relay_indx >= VA_RELAY_NBR_OF) autom_task_handle.state = 2;
             break;
         case 52:
             if (millis() > autom_cntrl.next_relay_ms )

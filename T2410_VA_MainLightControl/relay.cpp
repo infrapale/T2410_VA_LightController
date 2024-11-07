@@ -55,7 +55,7 @@ void relay_send_one(va_relays_et rindx, char value)
 {
     // <#X1N:RMH1;RKOK1;T;->\n  
     // {"Z":"MH1","S":"RKOK1","V":"T","R":"-"}
-    Serial.printf("%s %s %c\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
+    Serial.printf("#%d: %s %s %c\n", rindx, relay_addr[rindx].unit,relay_addr[rindx].relay, value);
     Serial.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
     // SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);
     SerialRfm.printf("<#X1N:%s;%s;%c;->\n", relay_addr[rindx].unit,relay_addr[rindx].relay, value);

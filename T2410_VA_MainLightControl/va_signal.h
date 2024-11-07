@@ -29,17 +29,6 @@ typedef enum
 
 typedef enum
 {
-  VA_SIGNAL_STATE_START     = 0x00,
-  VA_SIGNAL_STATE_AT_HOME   = 0x10,
-  VA_SIGNAL_STATE_COUNTDOWN = 0x20,
-  VA_SIGNAL_STATE_AWAY      = 0x30,
-  VA_SIGNAL_STATE_WARNING   = 0x40,
-  VA_SIGNAL_STATE_ALARM     = 0x50,
-  VA_SIGNAL_STATE_SENDING   = 0x60,
-} va_signal_state_et;
-
-typedef enum
-{
   VA_SIGNAL_INDEX_START = 0,
   VA_SIGNAL_INDEX_AT_HOME,
   VA_SIGNAL_INDEX_COUNTDOWN,
@@ -49,6 +38,19 @@ typedef enum
   VA_SIGNAL_INDEX_SENDING,
   VA_SIGNAL_INDEX_NBR_OF
 } va_signal_index_et;
+
+
+typedef enum
+{
+  VA_SIGNAL_STATE_START     = VA_SIGNAL_INDEX_START << 4,
+  VA_SIGNAL_STATE_AT_HOME   = VA_SIGNAL_INDEX_AT_HOME << 4,
+  VA_SIGNAL_STATE_COUNTDOWN = VA_SIGNAL_INDEX_COUNTDOWN << 4,
+  VA_SIGNAL_STATE_AWAY      = VA_SIGNAL_INDEX_AWAY << 4,
+  VA_SIGNAL_STATE_WARNING   = VA_SIGNAL_INDEX_WARNING << 4,
+  VA_SIGNAL_STATE_ALARM     = VA_SIGNAL_INDEX_ALARM << 4,
+  VA_SIGNAL_STATE_SENDING   = VA_SIGNAL_INDEX_SENDING << 4,
+} va_signal_state_et;
+
 
 typedef enum
 {
@@ -71,13 +73,13 @@ typedef struct
 
 typedef va_signal_pattern_st va_signal_seq[NBR_COLOR_SEQ];
 
+void va_signal_send_state_to_24h(uint16_t state);
+
 void va_signal_initialize(void);
 
 void va_signal_update(void);
 
-void va_signal_set_event(va_signal_event_et va_signal_event);
-
-//void va_signal_set_state(va_signal_state_et new_state);
+void va_signal_set_event(va_signal_event_et event);
 
 uint16_t va_signal_get_state(void);
 

@@ -131,7 +131,7 @@ void send_signal_event_alert(void)
 
 void send_signal_event_leave(void)
 {
-   va_signal_set_event(VA_SIGNAL_EVENT_LEAVE);
+   va_signal_set_event(VA_SIGNAL_EVENT_LOGOUT);
    menu4x2_show_now();
 }
 
@@ -167,7 +167,8 @@ void add_login_code_3(void)
     }
     if (correct_login) 
     {
-        va_signal_set_event(VA_SIGNAL_EVENT_LOGIN);
+        // va_signal_set_event(VA_SIGNAL_EVENT_LOGIN);
+        send_signal_event_login();
         Serial.println("Login accepted");
     }
     else
@@ -219,7 +220,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "          ", MENU_CAT_ACTIVE    , MENU_CHECK_OUT, dummy_menu},
     { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "Option    ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
+    { "Menu      ", MENU_CAT_ACTIVE    , MENU_OPTION, dummy_menu},
     { "          ", MENU_CAT_TITLE     , MENU_CODE_1, dummy_menu},
     { "          ", MENU_CAT_DATE_TIME , MENU_ROOT, dummy_menu},
     { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
@@ -260,14 +261,14 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
   },
   [MENU_CHECK_OUT] =
   {
-    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "Kotona    ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_login},
-    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "Alkuun    ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_TITLE     , MENU_ROOT, dummy_menu},
-    { "Poissa    ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_leave},
-    { "Sammuta   ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_ACTIVE    , MENU_ROOT, dummy_menu}
+    { "          ", MENU_CAT_ACTIVE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY      , MENU_ROOT, dummy_menu},
+    { "Alkuun    ", MENU_CAT_ACTIVE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_TITLE      , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_ACTIVE     , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_SHOW_LABEL , MENU_ROOT, dummy_menu},
+    { "Hyvaksy   ", MENU_CAT_ACTIVE     , MENU_ROOT, send_signal_event_leave}
   },
   [MENU_INFO] =
   {
@@ -282,14 +283,14 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
   },
   [MENU_INFO_1] =
   {
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_ROOT, dummy_menu},
-    { "          ", MENU_CAT_EMPTY     , MENU_OPTION, dummy_menu},
-    { "          ", MENU_CAT_TITLE     , MENU_INFO, dummy_menu},
-    { "          ", MENU_CAT_SENSOR    , MENU_INFO, dummy_menu},
-    { "          ", MENU_CAT_IS_DARK   , MENU_INFO, dummy_menu},
-    { "          ", MENU_CAT_STATE     , MENU_INFO, dummy_menu}
+    { "          ", MENU_CAT_EMPTY      , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY      , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY      , MENU_ROOT, dummy_menu},
+    { "          ", MENU_CAT_EMPTY      , MENU_OPTION, dummy_menu},
+    { "          ", MENU_CAT_SHOW_LABEL , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_SENSOR     , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_IS_DARK    , MENU_INFO, dummy_menu},
+    { "          ", MENU_CAT_STATE      , MENU_INFO, dummy_menu}
   },
   [MENU_INFO_2] =
   {
@@ -356,7 +357,7 @@ menu4x2_t menu4x2[MENU_NBR_OF] =
     { "Leave     ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_leave},
     { "Alert     ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_alert},
     { "Confirm   ", MENU_CAT_ACTIVE    , MENU_ROOT, send_signal_event_confirm}
-  },
+  }
 };
 
 
@@ -465,6 +466,17 @@ void menu4x2_show(uint8_t mindx)
           else sprintf(line0, "Is light");
           lcd.print (line0);
           break;  
+        case MENU_CAT_SHOW_LABEL:
+            switch(menu4x2_ctrl.level)
+            {
+              case MENU_CHECK_OUT:
+                sprintf(line0, "Checkout ");
+                break;
+              default:
+                sprintf(line0, "Menu#: %d", menu4x2_ctrl.level);
+                break;  
+            }
+            lcd.print (line0);
       }
     }
 }
