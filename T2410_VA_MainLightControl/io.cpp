@@ -33,10 +33,10 @@ void io_feed_watchdog(void)
 {
     if (io.wd_state == LOW) io.wd_state = HIGH;
     else io.wd_state = LOW;
-    digitalWrite(PIN_EDOG_CLR, io.wd_state);
+    if (io_internal_wd_is_enabled()) digitalWrite(PIN_EDOG_CLR, io.wd_state);
 }
 
-bool io_internal_wd_is_anabled(void)
+bool io_internal_wd_is_enabled(void)
 {
     return (digitalRead(PIN_WD_ENABLE) == HIGH);
 }

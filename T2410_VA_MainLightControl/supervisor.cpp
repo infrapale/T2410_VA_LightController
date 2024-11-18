@@ -58,12 +58,12 @@ uint16_t supervisor_get_ldr(void)
 void supervisor_wdt_begin(uint32_t d_ms)
 {
     if (d_ms > 8300) d_ms= 8300;
-    if (io_internal_wd_is_anabled()) rp2040.wdt_begin(d_ms);
+    if (io_internal_wd_is_enabled()) rp2040.wdt_begin(d_ms);
 }
 
 void supervisor_wdt_reset(void)
 {
-  rp2040.wdt_reset();
+  //rp2040.wdt_reset();
 }
 
 
@@ -112,7 +112,7 @@ void supervisor_task(void)
       } 
       break;  
     case 5:
-      delay_cntr = millis() + 8000;
+      delay_cntr = millis() + 80;
       super.sm->state = 6;
       break;
     case 6:
@@ -166,6 +166,7 @@ void supervisor_task(void)
       break;
      case 100:
       super.sm->state++;
+      //clr_edog = false;
       Serial.printf("!!! Waiting for Watchdog Reset\n\r");
       break;
     case 101:
@@ -178,6 +179,6 @@ void supervisor_task(void)
   // if (clr_edog)  edog_clear_watchdog();
   if (clr_edog ) 
   {
-    //io_feed_watchdog();
+    io_feed_watchdog();
   }
 }

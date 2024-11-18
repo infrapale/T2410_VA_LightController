@@ -33,6 +33,7 @@ typedef enum
     VA_RELAY_PIHA,
     VA_RELAY_TERASSI,
     VA_RELAY_POLKU,
+    VA_RELAY_JOULU,
     VA_RELAY_NBR_OF
 } va_relays_et;
 
@@ -48,6 +49,7 @@ typedef enum
     RELAY_GR_BIT_ULKO     = 0x00080UL,
     RELAY_GR_BIT_WC       = 0x00100UL,
     RELAY_GR_BIT_ET       = 0x00200UL,
+    RELAY_GR_BIT_KORISTE  = 0x00400UL,
     //RELAY_GR_BIT_   = 0x0000,
 } relay_group_nbit_et;
 
@@ -63,6 +65,7 @@ typedef enum
     VA_RELAY_GROUP_ULKO,
     VA_RELAY_GROUP_WC,
     VA_RELAY_GROUP_ET,
+    VA_RELAY_GROUP_KORISTE,
     VA_RELAY_GROUP_NBR_OF   
 } va_relay_group_et;
 

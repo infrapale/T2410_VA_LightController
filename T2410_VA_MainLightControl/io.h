@@ -56,7 +56,7 @@ void io_enable_v33(bool enable);
 
 void io_ext_clr(bool do_clear);
 
-bool io_internal_wd_is_anabled(void);
+bool io_internal_wd_is_enabled(void);
 
 void io_feed_watchdog(void);
 

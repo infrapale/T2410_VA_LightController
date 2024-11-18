@@ -197,6 +197,8 @@ void accept_new_time()
     main_ctrl.time.minute = menu4x2_ctrl.time.minute;
     main_ctrl.time.second = menu4x2_ctrl.time.second;
     rtc_set_main_ctrl_time();
+    autom_update_clock_24_time();
+
 }
 
 const menu_def_st menu4x2_def[MENU_TOTAL] =

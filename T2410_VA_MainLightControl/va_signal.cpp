@@ -25,6 +25,7 @@ typedef struct
   uint8_t one_pix_state;
   uint8_t seq_indx;
   uint8_t seq_cntr;
+  uint16_t return_state;
   uint32_t sm_millis;
   uint32_t count_down_ms;
   uint16_t cntr;
@@ -115,6 +116,16 @@ void va_signal_set_state(uint16_t new_state)
     rtc_set_ram_byte((uint8_t)main_ctrl.state);
     va_signal_set_relay_prog(signal_state_task_handle.state);
     Serial.printf("va_signal_set_state %d -> %d -> %d\n",new_state,main_ctrl.state, rtc_get_ram_byte());
+}
+
+void va_signal_save_return_state(void)
+{
+    va_signal.return_state = signal_state_task_handle.state;
+}
+
+void va_signal_return_state(void)
+{
+    va_signal_set_state(va_signal.return_state);
 }
 
 char *va_signal_get_state_label(void)
@@ -215,7 +226,9 @@ void va_signal_set_event(va_signal_event_et event)
             va_signal_set_state(VA_SIGNAL_STATE_ALARM);
             break;
         case VA_SIGNAL_EVENT_SENDING:
+            if (signal_state_task_handle.state != VA_SIGNAL_STATE_SENDING) va_signal_save_return_state();
             va_signal_set_state(VA_SIGNAL_STATE_SENDING);
+            va_signal.count_down_ms = millis() + 5000;
             break;
         case VA_SIGNAL_EVENT_TIMEOUT:
             
@@ -347,6 +360,10 @@ void va_signal_state_machine(void)
         break;
 
       case VA_SIGNAL_STATE_SENDING:
+        if (millis() > va_signal.count_down_ms)
+        {
+          va_signal_return_state();
+        }
         if (va_signal.event == VA_SIGNAL_EVENT_TIMEOUT) 
         {
           va_signal_set_state(VA_SIGNAL_STATE_AT_HOME);

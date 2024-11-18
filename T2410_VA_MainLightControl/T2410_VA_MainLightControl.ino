@@ -58,6 +58,7 @@ https://arduino-pico.readthedocs.io/en/latest/serial.html
 #include "autom.h"
 #include "supervisor.h"
 #include "rtc.h"
+#include "edog.h"
 
   
 
@@ -110,6 +111,8 @@ void setup() {
   initialize_tasks();
   rtc_initialize();
   va_signal_initialize();
+  edog_initialize(EDOG_I2C_ADDR);   // the circuit will require a pulldown  for the edog to function :(
+
 
   delay(1000);
   

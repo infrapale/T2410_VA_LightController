@@ -127,6 +127,8 @@ void edog_read_i2c(uint8_t bytes);
 
 void edog_set_wd_timeout(uint32_t wd_timeout);
 
+uint32_t edog_get_wd_timeout(void);
+
 void edog_set_sleep_time(uint32_t sleep_time);
 
 void edog_switch_off(void);

@@ -15,6 +15,7 @@ https://www.tastethecode.com/introducing-the-attiny-device-pcb-i2c-slave-devices
 #include <Wire.h>
 #include "edog.h"
 #include "helper.h"
+#include "io.h"
 
 uint8_t tarr1[I2C_TX_BUFF_SIZE];
 uint8_t tarr2[I2C_TX_BUFF_SIZE];
@@ -88,6 +89,18 @@ void edog_initialize(uint8_t i2c_addr)
   Serial.printf("edog_initialize(0x%2X)\n",i2c_addr);
   i2c.addr = i2c_addr;
   edog_ctrl.eeprom_addr_index = EEPROM_MAIN_DATA;
+  if (io_internal_wd_is_enabled())
+  {
+      Serial.println("Watchdog is enabled");
+      edog_set_wd_timeout(10000);
+      uint32_t u32 = edog_get_wd_timeout();
+      Serial.printf("edog WD timout = %d\n",u32);
+
+  }
+  else
+  {
+      Serial.println("Watchdog is disabled");
+  }
   //edog_build_test_data(0x20);
   //edog_test_eeprom_write_read();
   //edog_set_wd_timeout(5000);
