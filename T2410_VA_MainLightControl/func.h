@@ -21,6 +21,7 @@ typedef struct
 {
     func_et  type;
     uint16_t  indx;
+    char      data;
 
 } key_function_st;
 

@@ -14,9 +14,9 @@ Keypad 1
 
 Keypad 2
   --------------------------------------------
-  |5: KHH+PSH+Sauna     |1: MH2              |
+  |5: Tuloss            |1: MH2              |
   --------------------------------------------
-  |6: Tupa              |2: Eteinen          |
+  |6: Tupa              |2: Tupa             |
   --------------------------------------------
   |7: Keittio           |3: MH1              |
   --------------------------------------------
@@ -33,24 +33,24 @@ Keypad 2
 key_function_st key_func[NBR_KEY_PADS][NBR_KEYS_PER_PAD] =
 {
   {
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF},
-    {FUNC_OPTION,VA_RELAY_UNDEF}
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'},
+    {FUNC_OPTION,VA_RELAY_UNDEF, '0'}
   },  
   {
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_ARRIVE},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_TUPA},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_KORISTE},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_MH2},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_ARRIVE},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_KHH},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_ULKO},
-    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_MH1},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_ARRIVE, '0'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_TUPA, '1'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_KORISTE, '1'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_MH2, '1'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_ARRIVE, '1'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_KHH, '1'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_ULKO, '1'},
+    {FUNC_RELAY_GROUP, VA_RELAY_GROUP_MH1, '1'},
   }
 };
 
@@ -66,8 +66,9 @@ bool func_get_key(kbd_data_st *pkey, key_function_st *pfunc)
     {
         module = pkey->module - '1';
         key    = pkey->key -'1';
-        pfunc->type = key_func[module][key].type;
+        pfunc->type  = key_func[module][key].type;
         pfunc->indx  = key_func[module][key].indx;
+        pkey->value  = key_func[module][key].data;
         res = true;
         Serial.printf("Correct!  type= %d and index= %d\n", pfunc->type, pfunc->indx );
     }
